@@ -1,0 +1,907 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tareas - ToListEI</title>
+<style>
+  :root {
+    --bg-light: #fdfdfd; --card-bg: #ffffff; --primary-purple: #9061f9;
+    --text-main: #111827; --text-muted: #6b7280; --success: #22c55e;
+    --danger: #ef4444; --border-color: #f3f4f6; --radius: 20px;
+  }
+  body.dark {
+    --bg-light: #121212; --card-bg: #1e1e1e; --text-main: #f3f4f6;
+    --text-muted: #9ca3af; --border-color: #333;
+  }
+
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-main); }
+  body { display: flex; flex-direction: column; }
+
+.header {
+    flex-shrink: 0; 
+    display: flex; 
+    justify-content: space-between;
+    align-items: center; 
+    padding: 15px 25px;
+    background: var(--card-bg); /* Fondo blanco puro */
+    border-bottom: 1px solid var(--border-color); /* Borde sutil solicitado */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03); /* Sombra suave tipo card */
+    z-index: 10;
+    margin-bottom: 20px;
+  }
+    .header-top { display: flex; align-items: center; padding: 10px 10px; justify-content: space-between;  }
+  .tabs { display: flex; justify-content: space-around; padding-bottom: 10px; }
+  .tab { padding: 10px 15px; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
+  .tab.active { color: var(--primary-purple); border-bottom-color: var(--primary-purple); }
+
+  .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+  .view-section { display: none; }
+  .view-section.active { display: block; }
+
+.calendar-controls { 
+    display: flex; 
+    justify-content: space-between; 
+    margin: 0 auto 15px auto; /* Añadido margen auto para centrar y 15px abajo */
+    gap: 10px; 
+    max-width: 450px; /* Limitamos el ancho máximo en PC */
+  }
+    .calendar-controls select { padding: 8px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); flex: 1; }
+.calendar-grid { 
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 5px; 
+    background: var(--card-bg); 
+    padding: 10px; 
+    border-radius: var(--radius); 
+    border: 1px solid var(--border-color); 
+    max-width: 450px; /* Limitamos el ancho máximo en PC */
+    margin: 0 auto; /* Centramos el calendario */
+  }
+    .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer; font-size: 0.85rem; }
+  .day.has-task { background: #e0e7ff; color: var(--primary-purple); font-weight: 700; }
+  .day.selected { background: var(--primary-purple) !important; color: white; }
+
+  .task-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+
+  .task-today-pending { border-color: var(--danger) !important; }
+  .task-today-done { border-color: var(--success) !important; }
+
+  .status-tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; color: white; margin-bottom: 5px; }
+  .status-done { background: var(--success); }
+  .status-pending { background: var(--danger); }
+
+  .linked-preview {
+    margin-top: 10px;
+    padding: 8px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    font-size: 0.75rem;
+    color: var(--primary-purple);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .linked-preview img {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .linked-task-box {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .linked-task-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .linked-task-status {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 999px;
+    width: fit-content;
+  }
+
+  body.dark .linked-preview,
+  body.dark .linked-task-box {
+    background: #2d2d2d;
+    border-color: #444;
+  }
+
+  .group-title { font-size: 0.9rem; font-weight: 800; color: var(--primary-purple); margin: 20px 0 10px 5px; text-transform: uppercase; }
+  .fixed-section { border-top: 2px dashed var(--border-color); margin-top: 30px; padding-top: 10px; }
+
+  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-content { background: var(--card-bg); padding: 25px; border-radius: var(--radius); width: 85%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+  input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-main); box-sizing: border-box; }
+  .btn-save { width: 100%; padding: 14px; background: var(--primary-purple); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+
+/* Nav Inferior */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 75px; background: var(--card-bg);
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); padding-bottom: 15px;
+    z-index: 100;
+  }
+
+  .bottom-nav .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #f3f4f6; /* Círculo gris claro */
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    /* Transición suave para las animaciones */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  body.dark .bottom-nav .nav-icon {
+    background-color: #f3f4f6; /* Gris oscuro para modo noche */
+    border-color: #3f3f46;
+  }
+
+  /* Animación al pasar el cursor por encima (Hover) */
+  .bottom-nav .nav-icon:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  body.dark .bottom-nav .nav-icon:hover {
+    background-color: #383838;
+  }
+
+  /* Animación al hacer clic (Active) */
+  .bottom-nav .nav-icon:active {
+    transform: translateY(1px) scale(0.95);
+  }
+
+  .bottom-nav .nav-icon.active {
+    background: var(--soft-purple);
+    border-color: var(--primary-purple);
+  }
+
+  .bottom-nav .nav-icon img.icon-hod {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 0 !important;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+  }
+  .nav-icon { font-size: 22px; text-decoration: none; color: var(--text-main); }
+  .icon-hod { width: 35px; margin-bottom: 10px; }
+   .btn-back {
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: var(--text-main); padding: 0; display: flex; align-items: center;
+        }
+
+      .header h1 { font-size: 24px; font-weight: 800; color: #7c3aed; margin: 0; }
+
+/* Estilo de Urgencia para Mensajes */
+.urgency-urgent { background: #fffbeb !important; border: 2px solid #f59e0b !important; }
+
+/* Etiquetas y Subtareas */
+.badge-prio { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 8px; color: white; }
+.subtasks-list { margin-top: 8px; padding-left: 15px; font-size: 0.75rem; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 5px; }
+.countdown-text { font-size: 0.7rem; color: var(--danger); font-weight: 700; margin-top: 4px; }
+.btn-quick-done { width: 100%; margin-top: 8px; padding: 6px; background: var(--success); color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+
+/* Botón desactivado */
+.btn-quick-done:disabled { 
+  background: #9ca3af !important; 
+  cursor: not-allowed; 
+  opacity: 0.7; 
+}
+
+/* Nuevos estilos para indicadores de prioridad */
+.prio-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+.prio-high-dot { background-color: #ef4444; box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+.prio-medium-dot { background-color: #f59e0b; box-shadow: 0 0 5px rgba(245, 158, 11, 0.5); }
+.prio-low-dot { background-color: #22c55e; box-shadow: 0 0 5px rgba(34, 197, 94, 0.5); }
+
+/* Limpiar estilos antiguos de tarjeta coloreada */
+.task-card.prio-high, .task-card.prio-medium, .task-card.prio-low {
+  background: var(--card-bg) !important;
+  border-left: 1px solid var(--border-color) !important;
+}
+
+/* Estilo para la lista de subtareas en la tarjeta */
+.subtasks-preview {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.subtask-item-mini {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+/* Subtabs dentro del calendario */
+.task-subtabs {
+  display: flex;
+  justify-content: space-around;
+  padding-bottom: 10px;
+  margin-top: 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: transparent;
+  gap: 0;
+}
+
+.task-subtab {
+  padding: 10px 15px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  flex: 1;
+  text-align: center;
+}
+
+.task-subtab.active {
+  color: var(--primary-purple);
+  border-bottom-color: var(--primary-purple);
+  background: transparent;
+  box-shadow: none;
+}
+
+.task-subsection {
+  display: none;
+}
+
+.task-subsection.active {
+  display: block;
+}
+
+/* Evita que textos largos se salgan de las tarjetas */
+.task-card,
+.task-card *,
+.linked-preview,
+.linked-preview *,
+.linked-task-box,
+.linked-task-box *,
+.subtasks-preview,
+.subtasks-preview * {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;   /* estándar */
+  word-wrap: break-word;       /* compatibilidad */
+  word-break: break-word;      /* rompe palabras muy largas */
+}
+
+/* Importante para elementos flex */
+.task-card > *,
+.linked-preview > *,
+.linked-task-box > * {
+  min-width: 0;
+}
+
+/* Títulos largos */
+.task-card h4,
+.linked-task-title {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Descripciones largas */
+.task-card p,
+.linked-preview p,
+.linked-task-box p {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Selects e inputs dentro de modales */
+input,
+textarea,
+select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-top">
+    <button class="btn-back" style="padding-right: 20px;" onclick="location.href='home.html'">←</button>
+    <h1 style="margin:0;">Gestión de Tareas</h1>
+    <div style="width:20px;"></div>
+  </div>
+</header>
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('calendario', this)">Calendario</div>
+    <div class="tab" onclick="switchTab('ordenado', this)">Ordenado</div>
+    <div class="tab" onclick="switchTab('mensajes', this)">Mensajes</div>
+  </div>
+
+<main class="main-content">
+  <section id="calendario" class="view-section active">
+    
+    <div class="calendar-controls">
+      <select id="calMonth" onchange="renderCalendar()"></select>
+      <select id="calYear" onchange="renderCalendar()"></select>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <button class="btn-save" onclick="openTaskModal()">+ Nueva Tarea</button>
+
+    <div class="task-subtabs">
+  <div class="task-subtab active" onclick="switchTaskSubtab('selected', this)">
+    Seleccionada
+  </div>
+  <div class="task-subtab" onclick="switchTaskSubtab('today', this)">
+    Tareas de Hoy
+  </div>
+</div>
+
+<div id="selectedTasksSection" class="task-subsection active">
+  <h3 id="selectedDateTitle" style="margin-top:20px; font-size:1rem;">
+    Tareas del día
+  </h3>
+  <div id="dayTasks"></div>
+</div>
+
+<div id="todayTasksSection" class="task-subsection">
+  <div id="todayFixedTasks"></div>
+</div>
+  </section>
+
+  <section id="ordenado" class="view-section">
+    <div class="filtro-ordenado-container" style="margin: 15px 0; display: flex; gap: 10px; align-items: center; padding: 0 10px;">
+      <label for="filtroFechaOrdenado" style="font-size: 0.85rem; font-weight: bold; color: var(--text-muted);">Filtrar por fecha:</label>
+      <input type="date" id="filtroFechaOrdenado" onchange="renderOrderedTasks()" style="padding: 6px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.85rem;">
+      <button onclick="document.getElementById('filtroFechaOrdenado').value = ''; renderOrderedTasks();" style="padding: 6px 12px; border-radius: 12px; border: none; background: var(--soft-purple); color: var(--primary-purple); cursor: pointer; font-size: 0.8rem; font-weight: bold;">
+        Ver todas
+      </button>
+    </div>
+    <div id="orderedList"></div>
+  </section>
+
+  <section id="mensajes" class="view-section">
+    <button class="btn-save" onclick="openMsgModal()">+ Crear Mensaje Fijado</button>
+    <div id="msgList" style="margin-top:20px;"></div>
+  </section>
+</main>
+
+<div class="modal" id="taskModal">
+  <div class="modal-content">
+    <h2>Tarea</h2>
+    <div style="display:flex; gap:10px; margin-bottom:12px;">
+      <input type="text" id="taskIcon" placeholder="Icono" style="width: 60px; text-align: center; font-size: 1.2rem;">
+      <input type="text" id="taskTitle" placeholder="Título de la tarea" style="flex:1;">
+    </div>
+    <textarea id="taskDesc" placeholder="Descripción"></textarea>
+    <div style="display:flex; gap:10px;">
+      <input type="date" id="taskDate" style="flex:1;">
+      <input type="time" id="taskTime" style="flex:1;">
+    </div>
+    <select id="taskPriority">
+      <option value="low">Prioridad Baja</option>
+      <option value="medium">Prioridad Media</option>
+      <option value="high">Prioridad Alta</option>
+    </select>
+    <select id="taskStatus"><option value="pending">No hecha</option><option value="done">Hecha</option></select>
+
+    <label style="font-size: 0.8rem; font-weight: 700;">Vincular Lista o Elemento:</label>
+      <select id="taskLinkList" onchange="updateElementOptions()"><option value="">Selecciona Lista...</option></select>
+      <select id="taskLinkItem"><option value="">Toda la lista entera (Sin elemento)...</option></select>
+
+    <label style="font-size: 0.8rem; font-weight: 700;">Subtareas (una por línea):</label>
+    <textarea id="taskSubtasks" placeholder="Ej: Comprar pan&#10;Llamar al médico" rows="3"></textarea>
+
+    
+    <button class="btn-save" onclick="saveTask()">Guardar</button>
+    <button class="btn-save" style="background:var(--danger); display:none;" id="btnDeleteTask" onclick="deleteCurrentTask()">Eliminar</button>
+    <button class="btn-save" style="background:#ccc;" onclick="closeModal('taskModal')">Cerrar</button>
+  </div>
+</div>
+
+<div class="modal" id="msgModal">
+  <div class="modal-content">
+    <h2>Mensaje</h2>
+    <input type="text" id="msgTitle" placeholder="Título">
+    <textarea id="msgDesc" placeholder="Descripción"></textarea>
+    <label style="font-size: 0.8rem; font-weight: 700;">Vincular Tarea:</label>
+    <select id="msgLinkTask"><option value="">Sin tarea vinculada</option></select>
+    <button class="btn-save" onclick="saveMessage()">Guardar</button>
+    <button class="btn-save" style="background:var(--danger); display:none;" id="btnDeleteMsg" onclick="deleteCurrentMsg()">Eliminar</button>
+    <button class="btn-save" style="background:#ccc;" onclick="closeModal('msgModal')">Cerrar</button>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+    <a href="home.html" class="nav-icon" style="color:#9061f9">      
+      <img src="./build/home.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="todolist.html" class="nav-icon">
+      <img src="./build/list.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="task.html" class="nav-icon">
+      <img src="./build/campana.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="perfil.html" class="nav-icon">
+      <img src="./build/perfil.png" class="icon-hod" alt="icon">
+    </a>
+  </nav>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem('user_tasks') || '[]');
+let messages = JSON.parse(localStorage.getItem('home_messages') || '[]');
+let todolists = JSON.parse(localStorage.getItem('lists') || '[]');
+let currentEditIndex = null;
+let selectedDate = new Date().toISOString().split('T')[0];
+
+if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+
+const mSelect = document.getElementById('calMonth');
+const ySelect = document.getElementById('calYear');
+const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+months.forEach((m, i) => mSelect.innerHTML += `<option value="${i}" ${i==new Date().getMonth()?'selected':''}>${m}</option>`);
+for(let y=2024; y<=2030; y++) ySelect.innerHTML += `<option value="${y}" ${y==new Date().getFullYear()?'selected':''}>${y}</option>`;
+
+function switchTab(viewId, el) {
+  document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  el.classList.add('active');
+  renderAll();
+}
+
+function renderAll() {
+  renderCalendar();
+  renderDayTasks();
+  renderOrderedTasks();
+  renderMessages();
+  renderTodayFixed();
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  const m = parseInt(mSelect.value), y = parseInt(ySelect.value);
+  const firstDay = new Date(y, m, 1).getDay();
+  const days = new Date(y, m + 1, 0).getDate();
+
+  for(let i=0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) grid.innerHTML += '<div></div>';
+
+ for(let i=1; i<=days; i++) {
+    const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    // Buscamos todas las tareas de este día específico
+    const dayTasks = tasks.filter(t => t.date === dStr);
+    
+    const dayEl = document.createElement('div');
+    dayEl.className = `day ${dayTasks.length > 0 ? 'has-task' : ''} ${selectedDate === dStr ? 'selected' : ''}`;
+    dayEl.innerText = i;
+
+    // AÑADIR ICONOS: Creamos un contenedor mini para los iconos de las tareas
+    if(dayTasks.length > 0) {
+      const iconCont = document.createElement('div');
+      iconCont.style = "font-size: 0.5rem; display: flex; gap: 1px; position: absolute; bottom: 2px;";
+      // Mostramos hasta 3 iconos para no saturar la celda
+      dayTasks.slice(0, 3).forEach(t => {
+        const span = document.createElement('span');
+        span.innerText = t.icon || '•';
+        iconCont.appendChild(span);
+      });
+      dayEl.style.position = "relative"; // Necesario para posicionar los iconos
+      dayEl.appendChild(iconCont);
+    }
+
+    dayEl.onclick = () => { selectedDate = dStr; renderAll(); };
+    grid.appendChild(dayEl);
+  }
+}
+
+function getLinkedItemData(task) {
+  if(task.listIdx === '' || task.listIdx === null || task.listIdx === undefined) return null;
+  const list = todolists[task.listIdx];
+  if(!list || !list.items) return null;
+  return list.items.find(item => item.name === task.linkedItem) || null;
+}
+
+function createTaskEl(t, i) {
+  const el = document.createElement('div');
+  const today = new Date().toISOString().split('T')[0];
+  const isToday = t.date === today;
+  
+  el.className = `task-card ${isToday ? (t.status === 'done' ? 'task-today-done' : 'task-today-pending') : ''}`;
+  el.onclick = () => openTaskModal(i);
+
+  // Determinar círculo de prioridad
+  const dotClass = t.priority === 'high' ? 'prio-high-dot' : (t.priority === 'medium' ? 'prio-medium-dot' : 'prio-low-dot');
+
+  // Renderizar subtareas
+  let subsHtml = '';
+  if (t.subtasks && t.subtasks.length > 0) {
+    subsHtml = `<div class="subtasks-preview">` + 
+      t.subtasks.slice(0, 3).map(s => `<div class="subtask-item-mini">- ${s}</div>`).join('') +
+      (t.subtasks.length > 3 ? `<div style="font-size:0.6rem; margin-left:15px;">...y ${t.subtasks.length - 3} más</div>` : '') +
+      `</div>`;
+  }
+
+  // Información extendida del elemento enlazado o lista enlazada
+  let linkHtml = '';
+  if(t.linkedList) {
+    if(t.linkedItem) {
+      // CASO A: Vinculado a un elemento específico de la lista (Comportamiento original)
+      const linkedData = getLinkedItemData(t);
+      const imageHtml = linkedData && linkedData.img ? `<img src="${linkedData.img}" alt="Imagen">` : '';
+      const descHtml = linkedData && linkedData.desc ? `<p style="font-size:0.65rem; margin:2px 0; font-weight:normal; opacity:0.8;">${linkedData.desc}</p>` : '';
+      
+      linkHtml = `
+        <div class="linked-preview" onclick="event.stopPropagation(); goToLink(${t.listIdx})">
+          ${imageHtml}
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between;">
+              <strong>🔗 ${t.linkedItem}</strong>
+              <span style="font-size:0.6rem; opacity:0.7;">${t.linkedList}</span>
+            </div>
+            ${descHtml}
+          </div>
+        </div>`;
+    } else {
+      // CASO B: NUEVO - Vinculado a toda la lista entera
+      linkHtml = `
+        <div class="linked-preview" onclick="event.stopPropagation(); goToLink(${t.listIdx})">
+          <div style="flex:1; padding: 4px 2px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>📂 Lista: ${t.linkedList}</strong>
+              <span style="font-size:0.65rem; color:var(--primary-purple); font-weight:800;">Ver lista entera ➔</span>
+            </div>
+          </div>
+        </div>`;
+    }
+  }
+
+  el.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div style="display:flex; align-items:center;">
+        <span class="prio-dot ${dotClass}"></span>
+        <span class="status-tag ${t.status === 'done' ? 'status-done' : 'status-pending'}">
+          ${t.status === 'done' ? 'Hecha' : 'Pendiente'}
+        </span>
+      </div>
+      <span style="font-size:0.75rem; font-weight:800; color:var(--primary-purple);">${t.time || ''}</span>
+    </div>
+    <h4 style="margin:8px 0;">${t.icon || ''} ${t.title}</h4>
+    <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">${t.desc || ''}</p>
+    ${subsHtml}
+    ${linkHtml}
+  `;
+
+  return el;
+}
+
+function goToLink(idx) {
+  localStorage.setItem('currentList', idx);
+  location.href = 'list.html';
+}
+
+function updateElementOptions() {
+  const listIdx = document.getElementById('taskLinkList').value;
+  const itemSelect = document.getElementById('taskLinkItem');
+  // Cambiamos el texto por defecto indicando que vincula toda la lista
+  itemSelect.innerHTML = '<option value="">Toda la lista entera (Sin elemento)...</option>';
+
+  if(listIdx !== '') {
+    todolists[listIdx].items.forEach(item => {
+      itemSelect.innerHTML += `<option value="${item.name}">${item.name}</option>`;
+    });
+  }
+}
+
+function openTaskModal(index = null) {
+  currentEditIndex = index;
+  const listSelect = document.getElementById('taskLinkList');
+  listSelect.innerHTML = '<option value="">Selecciona Lista...</option>';
+  todolists.forEach((l, i) => listSelect.innerHTML += `<option value="${i}">${l.name}</option>`);
+
+  if(index !== null) {
+    const t = tasks[index];
+    document.getElementById('taskIcon').value = t.icon || "";
+    document.getElementById('taskTitle').value = t.title;
+    document.getElementById('taskTime').value = t.time || "";
+    document.getElementById('taskPriority').value = t.priority || "low";
+    document.getElementById('taskDesc').value = t.desc;
+    document.getElementById('taskStatus').value = t.status;
+    document.getElementById('taskDate').value = t.date;
+    document.getElementById('taskSubtasks').value = (t.subtasks || []).join('\n');
+    
+    document.getElementById('taskLinkList').value = t.listIdx ?? '';
+    updateElementOptions();
+    document.getElementById('taskLinkItem').value = t.linkedItem || '';
+    document.getElementById('btnDeleteTask').style.display = 'block';
+  } else {
+    document.getElementById('taskIcon').value = '';
+    document.getElementById('taskTitle').value = '';
+    document.getElementById('taskDesc').value = '';
+    document.getElementById('taskSubtasks').value = '';
+    document.getElementById('taskStatus').value = 'pending';
+    document.getElementById('taskDate').value = selectedDate;
+    document.getElementById('taskLinkList').value = '';
+    // Inicialización limpia para nueva tarea
+    document.getElementById('taskLinkItem').innerHTML = '<option value="">Toda la lista entera (Sin elemento)...</option>';
+    document.getElementById('btnDeleteTask').style.display = 'none';
+  }
+  document.getElementById('taskModal').style.display = 'flex';
+}
+
+function saveTask() {
+  const listIdx = document.getElementById('taskLinkList').value;
+  const linkedItem = document.getElementById('taskLinkItem').value;
+  //const subtasks = document.getElementById('taskSubtasks').value.split('\n').filter(s => s.trim() !== "");
+    const data = {
+        icon: document.getElementById('taskIcon').value, // Guardar icono
+        title: document.getElementById('taskTitle').value,
+        desc: document.getElementById('taskDesc').value,
+        date: document.getElementById('taskDate').value,
+        time: document.getElementById('taskTime').value, // Guardar hora
+        priority: document.getElementById('taskPriority').value,
+        subtasks: document.getElementById('taskSubtasks').value.split('\n').filter(s => s.trim() !== ""),
+        status: document.getElementById('taskStatus').value,
+        listIdx: listIdx,
+    linkedList: listIdx !== '' ? todolists[listIdx].name : null,
+    linkedItem: linkedItem || null
+  };
+
+  if(currentEditIndex !== null) tasks[currentEditIndex] = data;
+  else tasks.push(data);
+
+  localStorage.setItem('user_tasks', JSON.stringify(tasks));
+  closeModal('taskModal');
+  renderAll();
+}
+
+function openMsgModal(index = null) {
+  currentEditIndex = index;
+  const tSelect = document.getElementById('msgLinkTask');
+  tSelect.innerHTML = '<option value="">Sin tarea vinculada</option>';
+  tasks.forEach((t, i) => tSelect.innerHTML += `<option value="${i}">${t.title}</option>`);
+
+  if(index !== null) {
+    document.getElementById('msgTitle').value = messages[index].title;
+    document.getElementById('msgDesc').value = messages[index].desc;
+    tSelect.value = messages[index].taskIdx ?? '';
+    document.getElementById('btnDeleteMsg').style.display = 'block';
+  } else {
+    document.getElementById('msgTitle').value = '';
+    document.getElementById('msgDesc').value = '';
+    tSelect.value = '';
+    document.getElementById('btnDeleteMsg').style.display = 'none';
+  }
+
+  document.getElementById('msgModal').style.display = 'flex';
+}
+
+function saveMessage() {
+  const taskIdx = document.getElementById('msgLinkTask').value;
+
+  const data = {
+    title: document.getElementById('msgTitle').value,
+    desc: document.getElementById('msgDesc').value,
+    taskIdx: taskIdx !== '' ? parseInt(taskIdx) : null,
+    linkedTaskName: taskIdx !== '' ? tasks[taskIdx].title : null
+  };
+
+  if(currentEditIndex !== null) messages[currentEditIndex] = data;
+  else messages.push(data);
+
+  localStorage.setItem('home_messages', JSON.stringify(messages));
+  closeModal('msgModal');
+  renderMessages();
+}
+
+function renderDayTasks() {
+  const c = document.getElementById('dayTasks');
+  c.innerHTML = '';
+  tasks.forEach((t, i) => {
+    if(t.date === selectedDate) c.appendChild(createTaskEl(t, i));
+  });
+}
+
+function renderTodayFixed() {
+  const c = document.getElementById('todayFixedTasks');
+  c.innerHTML = '';
+  const today = new Date().toISOString().split('T')[0];
+  tasks.forEach((t, i) => {
+    if(t.date === today) c.appendChild(createTaskEl(t, i));
+  });
+}
+
+function renderOrderedTasks() {
+  const c = document.getElementById('orderedList');
+  // Capturamos el valor del input del filtro (si existe)
+  const filterInput = document.getElementById('filtroFechaOrdenado');
+  const fechaFiltro = filterInput ? filterInput.value : '';
+  
+  c.innerHTML = '';
+
+  const groups = {};
+  tasks.forEach((t, i) => {
+    // FILTRO: Si el usuario ha elegido una fecha y no coincide con la de la tarea, la ignoramos
+    if (fechaFiltro && t.date !== fechaFiltro) return;
+
+    if(!groups[t.date]) groups[t.date] = [];
+    groups[t.date].push({...t, idx: i});
+  });
+
+  const ordenedDates = Object.keys(groups).sort();
+
+  // Si no hay tareas que coincidan con el filtro, mostramos un mensaje limpio
+  if (ordenedDates.length === 0) {
+    c.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 0.9rem; text-align: center;">No hay tareas para esta fecha.</p>';
+    return;
+  }
+
+  ordenedDates.forEach(d => {
+    // MEJORA: Usamos insertAdjacentHTML en vez de '+=' para evitar que se rompan 
+    // las funciones de click de las tarjetas de los grupos renderizados previamente.
+    c.insertAdjacentHTML('beforeend', `<div class="group-title">${d}</div>`);
+    
+    // ORDENACIÓN: Definimos el peso de cada prioridad
+    const priorityWeight = { high: 1, medium: 2, low: 3 };
+    
+    // Ordenamos las tareas de este día por prioridad antes de pintarlas
+    groups[d].sort((a, b) => {
+      return (priorityWeight[a.priority] || 3) - (priorityWeight[b.priority] || 3);
+    });
+
+    groups[d].forEach(t => c.appendChild(createTaskEl(t, t.idx)));
+  });
+}
+
+
+function renderMessages() {
+  const c = document.getElementById('msgList'); 
+  c.innerHTML = '';
+  const today = new Date().toISOString().split('T')[0];
+
+  messages.forEach((m, i) => {
+    if(m.expiry && m.expiry < today) return; 
+
+    const el = document.createElement('div');
+    el.className = `task-card ${m.urgency === 'urgent' ? 'urgency-urgent' : ''}`;
+    
+    let taskFullHtml = '';
+    if(m.taskIdx !== null && m.taskIdx !== undefined && tasks[m.taskIdx]) {
+      const task = tasks[m.taskIdx];
+      const isDone = task.status === 'done';
+      const dotClass = task.priority === 'high' ? 'prio-high-dot' : (task.priority === 'medium' ? 'prio-medium-dot' : 'prio-low-dot');
+      
+      taskFullHtml = `
+        <div class="linked-task-box" style="border-left: 4px solid ${task.priority === 'high' ? '#ef4444' : (task.priority === 'medium' ? '#f59e0b' : '#22c55e')};">
+          <div style="display:flex; justify-content:space-between;">
+            <div style="font-weight:500;"><span class="prio-dot ${dotClass}"></span>${task.icon || ''} ${task.title}</div>
+            <span class="linked-task-status ${isDone ? 'status-done' : 'status-pending'}">${isDone ? 'Hecha' : 'Pendiente'}</span>
+          </div>
+          <p style="font-size:0.75rem; margin:5px 0;">${task.desc || 'Sin descripción'}</p>
+          <button class="btn-quick-done" ${isDone ? 'disabled' : ''} onclick="event.stopPropagation(); quickComplete(${m.taskIdx})">
+            ${isDone ? '✓ Completada' : 'Marcar como Hecha'}
+          </button>
+        </div>`;
+    }
+
+    el.onclick = () => openMsgModal(i);
+    el.innerHTML = `
+      <div style="display:flex; justify-content:space-between;">
+        <h4 style="margin:0;">📌 ${m.title}</h4>
+        ${m.urgency === 'urgent' ? '<span class="badge-prio" style="background:#f59e0b">URGENTE</span>' : ''}
+      </div>
+      <p style="font-size:0.75rem; margin:8px 0;">${m.desc}</p>
+      ${taskFullHtml}
+    `;
+    c.appendChild(el);
+  });
+}
+
+function quickComplete(idx) {
+  tasks[idx].status = 'done';
+  localStorage.setItem('user_tasks', JSON.stringify(tasks));
+  renderAll();
+}
+
+function deleteCurrentTask() {
+  tasks.splice(currentEditIndex, 1);
+  localStorage.setItem('user_tasks', JSON.stringify(tasks));
+  closeModal('taskModal');
+  renderAll();
+}
+
+function deleteCurrentMsg() {
+  messages.splice(currentEditIndex, 1);
+  localStorage.setItem('home_messages', JSON.stringify(messages));
+  closeModal('msgModal');
+  renderMessages();
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+function renderDayTasks() {
+  const c = document.getElementById('dayTasks');
+  const title = document.getElementById('selectedDateTitle');
+
+  c.innerHTML = '';
+  title.textContent = `Tareas del ${selectedDate}`;
+
+  tasks.forEach((t, i) => {
+    if (t.date === selectedDate) {
+      c.appendChild(createTaskEl(t, i));
+    }
+  });
+
+  if (c.innerHTML === '') {
+    c.innerHTML = '<p style="color: var(--text-muted);">No hay tareas para esta fecha.</p>';
+  }
+}
+function switchTaskSubtab(tabId, el) {
+  // Quitar active de todos los subtabs
+  document.querySelectorAll('.task-subtab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+
+  // Ocultar todas las secciones
+  document.querySelectorAll('.task-subsection').forEach(section => {
+    section.classList.remove('active');
+  });
+
+  // Activar el botón pulsado
+  el.classList.add('active');
+
+  // Mostrar la sección correspondiente
+  if (tabId === 'selected') {
+    document.getElementById('selectedTasksSection').classList.add('active');
+  } else if (tabId === 'today') {
+    document.getElementById('todayTasksSection').classList.add('active');
+  }
+}
+renderAll();
+</script>
+</body>
+</html>

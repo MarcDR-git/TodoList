@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Home - ToListEI</title>
+<style>
+  :root {
+    --bg-light: #fdfdfd;
+    --card-bg: #ffffff;
+    --primary-purple: #9061f9;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --soft-purple: #f3f0ff;
+    --border-color: #f3f4f6;
+    --radius: 20px;
+  }
+
+  /* Estilos Modo Oscuro */
+  body.dark {
+    --bg-light: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --soft-purple: #2d2d2d;
+    --border-color: #333333;
+  }
+
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-light); color: var(--text-main);
+    transition: background 0.3s;
+  }
+
+  body { display: flex; flex-direction: column; }
+
+ .header {
+    flex-shrink: 0; 
+    display: flex; 
+    justify-content: space-between;
+    align-items: center; 
+    padding: 15px 25px;
+    background: var(--card-bg); /* Fondo blanco puro */
+    border-bottom: 1px solid var(--border-color); /* Borde sutil solicitado */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03); /* Sombra suave tipo card */
+    z-index: 10;
+  }
+
+  .header h1 { font-size: 24px; font-weight: 800; color: #7c3aed; margin: 0; }
+
+  .profile-btn {
+    background: #c7d2fe; border: none; width: 42px; height: 42px;
+    border-radius: 50%; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 20px;
+    overflow: hidden; padding: 0;
+  }
+  .profile-btn img { width: 100%; height: 100%; object-fit: cover; }
+  
+
+.main-content {
+  flex: 1; 
+  padding: 0 25px; 
+  display: flex; 
+  flex-direction: column; 
+  overflow-y: auto; /* Cambiado de hidden a auto */
+}
+
+  .welcome-card {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: var(--radius); padding: 18px; margin-bottom: 20px;
+    padding-top: 30;
+    padding-bottom: 30px;
+    margin-top: 20px;
+  }
+
+  .welcome-card img.icon-guia { width: 35px; margin-bottom: 10px; }
+  .welcome-card h2 { margin: 0 0 5px 0; font-size: 1.1rem; }
+  .welcome-card p { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px; }
+
+  .btn-guia {
+    background: var(--soft-purple); color: var(--primary-purple);
+    border: none; padding: 8px 20px; border-radius: 15px;
+    font-weight: 600; cursor: pointer;
+    margin-top: 15px;
+  }
+
+  .menu-list { display: flex; flex-direction: column; gap: 2px; margin-bottom: 20px; padding-bottom: 10px;}
+
+  .menu-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; text-decoration: none; color: var(--text-main);
+    padding-left: 10px;
+    font-weight: 700; font-size: 1.05rem;
+  }
+  .menu-item::after { content: '›'; font-size: 22px; color: var(--text-muted); }
+
+  /* 1. Asegura que el track no corte las sombras de las tarjetas */
+.main-content {
+    flex: 1;
+    padding: 0 25px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Permitir scroll vertical para ver las tareas de abajo */
+}
+
+.messages-track {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    padding: 10px 5px 25px 5px;
+    min-height: 220px;
+    margin-bottom: 20px;
+}
+
+.messages-track::-webkit-scrollbar {
+    display: none;
+}
+
+  .messages-track::-webkit-scrollbar { display: none; }
+
+  .msg-card {
+    flex: 0 0 85%; min-width: 85%; background: var(--card-bg);
+    border: 1px solid var(--border-color); border-radius: 20px;
+    padding: 18px; scroll-snap-align: start;
+    padding-bottom: 80px;
+  }
+  .msg-card * { pointer-events: none; }
+  .msg-header { text-align: right; color: var(--text-muted); font-size: 0.75rem; margin-bottom: 10px; }
+  .msg-body { display: flex; align-items: center; gap: 15px; }
+  .msg-circle { width: 45px; height: 45px; background: #e0e7ff; border-radius: 50%; }
+  body.dark .msg-circle { background: #333; }
+  .msg-info h4 { margin: 0; font-size: 1rem; }
+  .msg-info p { margin: 3px 0 0 0; color: var(--text-muted); font-size: 0.8rem; }
+
+/* Nav Inferior */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 75px; background: var(--card-bg);
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); padding-bottom: 15px;
+    z-index: 100;
+  }
+
+  .bottom-nav .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #f3f4f6; /* Círculo gris claro */
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    /* Transición suave para las animaciones */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  body.dark .bottom-nav .nav-icon {
+    background-color: #f3f4f6; /* Gris oscuro para modo noche */
+    border-color: #3f3f46;
+  }
+
+  /* Animación al pasar el cursor por encima (Hover) */
+  .bottom-nav .nav-icon:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  body.dark .bottom-nav .nav-icon:hover {
+    background-color: #383838;
+  }
+
+  /* Animación al hacer clic (Active) */
+  .bottom-nav .nav-icon:active {
+    transform: translateY(1px) scale(0.95);
+  }
+
+  .bottom-nav .nav-icon.active {
+    background: var(--soft-purple);
+    border-color: var(--primary-purple);
+  }
+
+  .bottom-nav .nav-icon img.icon-hod {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 0 !important;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+  }
+  .nav-icon { font-size: 22px; text-decoration: none; color: var(--text-main); }
+  /* Estilos mejorados para el Slider tipo Imagen */
+.messages-container {
+  overflow-x: auto;
+  display: flex;
+  padding: 10px 5px;
+  gap: 15px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.messages-container::-webkit-scrollbar { display: none; }
+
+.msg-card {
+  min-width: 85%;
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05); /* Sombra suave */
+  border: 1px solid var(--border-color);
+  scroll-snap-align: center;
+}
+
+.msg-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.msg-icon-bg {
+  background: var(--soft-purple);
+  padding: 8px;
+  border-radius: 12px;
+  font-size: 20px;
+}
+
+/* El recuadro del elemento enlazado (el que se parece a tu captura) */
+.linked-item-preview {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  position: relative;
+}
+
+.linked-item-preview img {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f0f0f0;
+}
+
+.linked-item-info h4 { margin: 0; font-size: 0.9rem; color: var(--text-main); }
+.linked-item-info p { margin: 2px 0; font-size: 0.75rem; color: var(--text-muted); }
+.linked-item-info span { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px; }
+
+.link-icon-abs {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  color: var(--primary-purple);
+  font-size: 14px;
+}
+.user-avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--primary-purple);
+}
+.icon-hod { width: 35px; margin-bottom: 10px; }
+/* Contenedor para el nuevo apartado */
+.section-title {
+    margin: 20px 20px 10px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title2 {
+    margin: 30px 20px 10px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.msg-card-detailed:active { transform: scale(0.98); }
+
+.msg-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 10px;
+    background: var(--soft-purple);
+    color: var(--primary-purple);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+/* Caja de tarea vinculada dentro del mensaje */
+.linked-task-mini {
+    margin-top: 12px;
+    padding: 10px;
+    background: var(--bg-light);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-purple);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.linked-task-mini img {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.prio-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/*por revisar*/
+
+
+/* Tarjeta base para el Home */
+.home-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* Específico para el slider (Ancho fijo) */
+.msg-card-detailed {
+      width: 400px; /* Ancho igual al de tus mensajes */
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+}
+
+/* Específico para la lista de tareas (Ancho total) */
+.task-card-home {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Indicadores y detalles (igual que en task.html) */
+.prio-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.prio-high { background: #ef4444; }
+.prio-medium { background: #f59e0b; }
+.prio-low { background: #22c55e; }
+
+.subtasks-preview {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.linked-mini-home {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: var(--soft-purple);
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+.linked-mini-home img { width: 30px; height: 30px; border-radius: 6px; object-fit: cover; }
+
+/* Contenedor del Slider de Tareas (Igual al de Mensajes) */
+.tasks-slider-container {
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+
+/* Tarjeta de Tarea para el Slider (Estrecha y Pro) */
+.task-card-horizontal {
+    width: 400px; /* Ancho igual al de tus mensajes */
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+}
+
+/* Indicador de prioridad tipo "píldora" */
+.prio-tag {
+    font-size: 0.6rem;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    color: white;
+}
+
+/* ==========================================================================
+     NUEVOS ESTILOS PARA EL MENÚ DE TABS Y SLIDERS UNIFICADOS
+     ========================================================================== */
+  .tabs-container {
+    display: flex;
+    align-items: center;
+    margin: 25px 0 10px 0;
+    border-bottom: 2px solid var(--border-color);
+    gap: 20px;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    padding: 8px 0;
+    cursor: pointer;
+    position: relative;
+    font-family: inherit;
+    transition: color 0.2s;
+    margin-right: 15px;
+  }
+
+  .tab-btn.active {
+    color: var(--text-main);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--primary-purple);
+    border-radius: 2px;
+  }
+
+  /* Control de visibilidad de los contenedores */
+  .tab-content {
+    display: none !important;
+  }
+
+  .tab-content.active {
+    display: flex !important;
+  }
+
+  /* Contenedor de tareas de hoy (Ahora en Horizontal) */
+#today-tasks-container {
+    /* Quitamos el display flex de aquí para que la clase .tab-content pueda ocultarlo */
+    flex-direction: row !important; 
+    gap: 15px;
+    overflow-x: auto !important;   
+    scrollbar-width: none;         
+    scroll-snap-type: x mandatory; 
+    padding: 10px 5px 5px 5px;    
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#today-tasks-container::-webkit-scrollbar {
+    display: none;                 /* Oculta la barra en Chrome/Safari */
+}
+
+/* Evita que los textos largos se salgan de la tarjeta */
+.home-card,
+.msg-card-detailed,
+.task-card-horizontal,
+.home-card h4,
+.home-card p,
+.home-card span,
+.home-card div {
+  word-wrap: break-word;      /* Compatibilidad antigua */
+  overflow-wrap: break-word;  /* Estándar actual */
+  word-break: break-word;     /* Fuerza salto si no hay espacios */
+}
+
+/* Títulos de tareas y mensajes */
+.home-card h4 {
+  white-space: normal;        /* Permite varias líneas */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Si quieres limitar el título a 2 líneas */
+.home-card h4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Descripciones limitadas a 3 líneas */
+.home-card p {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Contenedores flex con texto truncable */
+.home-card [style*="min-width:0"] {
+  min-width: 0;
+}
+</style>
+</head>
+<body id="body">
+
+  <header class="header">
+    <h1>Home</h1>
+    <div class="header-actions">
+      <button class="profile-btn" onclick="location.href='perfil.html'" id="profileBtn">
+        <span id="p-emoji">👤</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <section class="welcome-card">
+      <img src="./build/todolist.png" class="icon-guia" alt="icon">
+      <h2 id="welcome-text">Bienvenido a ToListEI</h2>
+      <p>Si tienes dudas del uso de la app consulta la siguiente opción adjuntada:</p>
+      <button class="btn-guia" onclick="location.href='follow.html'">Guía</button>
+    </section>
+
+    <nav class="menu-list">
+      <a href="todolist.html" class="menu-item"><span>Mis listas</span></a>
+      <a href="task.html" class="menu-item"><span>Tareas</span></a>
+      <a href="stats.html" class="menu-item"><span>Estadísticas</span></a>
+    </nav>
+    
+   <div class="tabs-container">
+      <button class="tab-btn active" onclick="switchTab('mensajes')">Mensajes de hoy</button>
+      <button class="tab-btn" onclick="switchTab('tareas')">Tareas de hoy</button>
+      <a id="view-all-tasks" href="task.html" style="font-size: 0.75rem; color: var(--primary-purple); text-decoration: none; margin-left: auto; display: none; font-weight: 700;">Ver todas</a>
+    </div>
+
+    <div class="messages-track tab-content active" id="slider"></div>
+    <div class="tab-content" id="today-tasks-container"></div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-icon" style="color:#9061f9">      
+      <img src="./build/home.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="todolist.html" class="nav-icon">
+      <img src="./build/list.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="task.html" class="nav-icon">
+      <img src="./build/campana.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="perfil.html" class="nav-icon">
+      <img src="./build/perfil.png" class="icon-hod" alt="icon">
+    </a>
+  </nav>
+
+  <script>
+    // --- CARGA DE DATOS INICIAL ---
+  // Añadimos estas líneas para obtener los datos de tareas y mensajes
+  let tasks = JSON.parse(localStorage.getItem('user_tasks') || '[]');
+  let messages = JSON.parse(localStorage.getItem('home_messages') || '[]');
+
+  // 1. Cargar Modo Oscuro
+  if(localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark');
+  }
+    // 1. Cargar Modo Oscuro
+    if(localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark');
+    }
+
+    // 2. Cargar Nombre de Usuario
+    const username = localStorage.getItem('username');
+    if (username) {
+      document.getElementById('welcome-text').innerText = `Bienvenido a ToListEI, ${username}`;
+    }
+
+    // 3. Cargar Foto de Perfil
+    const avatar = localStorage.getItem('user_avatar');
+    if (avatar) {
+      const btn = document.getElementById('profileBtn');
+      btn.innerHTML = `<img src="${avatar}" alt="Perfil">`;
+    }
+
+    // Lógica del Slider
+    const slider = document.getElementById('slider');
+    let isDown = false; let startX; let scrollLeft;
+
+    slider.addEventListener('mousedown', (e) => {
+      isDown = true; slider.style.cursor = 'grabbing';
+      startX = e.pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+    });
+    slider.addEventListener('mouseleave', () => { isDown = false; slider.style.cursor = 'grab'; });
+    slider.addEventListener('mouseup', () => { isDown = false; slider.style.cursor = 'grab'; });
+    slider.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      slider.scrollLeft = scrollLeft - walk;
+    });
+
+// Función para alternar entre las pestañas (Tabs)
+    function switchTab(tab) {
+      const tabs = document.querySelectorAll('.tab-btn');
+      const msgContent = document.getElementById('slider');
+      const taskContent = document.getElementById('today-tasks-container');
+      const viewAllLink = document.getElementById('view-all-tasks');
+
+      if (tab === 'mensajes') {
+        tabs[0].classList.add('active');
+        tabs[1].classList.remove('active');
+        msgContent.classList.add('active');
+        taskContent.classList.remove('active');
+        viewAllLink.style.display = 'none';
+      } else {
+        tabs[0].classList.remove('active');
+        tabs[1].classList.add('active');
+        msgContent.classList.remove('active');
+        taskContent.classList.add('active');
+        viewAllLink.style.display = 'block';
+      }
+    }
+
+    // Lógica reutilizable para Scroll Arrastrando con el Ratón (Desktop)
+    function enableDragScroll(el) {
+      let isDown = false; let startX; let scrollLeft;
+
+      el.addEventListener('mousedown', (e) => {
+        isDown = true; el.style.cursor = 'grabbing';
+        startX = e.pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+      });
+      el.addEventListener('mouseleave', () => { isDown = false; el.style.cursor = 'grab'; });
+      el.addEventListener('mouseup', () => { isDown = false; el.style.cursor = 'grab'; });
+      el.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        el.scrollLeft = scrollLeft - walk;
+      });
+    }
+
+    // Activar el scroll táctil/arrastrable en ambos contenedores
+    enableDragScroll(document.getElementById('slider'));
+    enableDragScroll(document.getElementById('today-tasks-container'));
+
+    // Función para renderizar los mensajes fijados y las tareas de hoy en el slider
+function renderHome() {
+  const slider = document.getElementById('slider');
+  const taskContainer = document.getElementById('today-tasks-container');
+  slider.innerHTML = '';
+  taskContainer.innerHTML = '';
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const allLists = JSON.parse(localStorage.getItem('lists') || '[]');
+  const userAvatar = localStorage.getItem('user_avatar') || './build/perfil.png';
+
+  // --- 1. RENDERIZAR MENSAJES FIJADOS (CARRUSEL) ---
+ messages.forEach((msg) => {
+      const card = document.createElement('div');
+      card.className = 'home-card msg-card-detailed';
+
+      let taskPreview = '';
+      // Dentro del bloque:
+if (msg.taskIdx !== null && msg.taskIdx !== undefined && tasks[msg.taskIdx]) {
+  const t = tasks[msg.taskIdx];
+  const isDone = t.status === 'done';
+  const prioClass = `prio-${t.priority || 'low'}`;
+
+  // Subtareas (opcional)
+  let subsHtml = '';
+  if (t.subtasks && t.subtasks.length > 0) {
+    subsHtml = `
+      <div style="
+        font-size:0.68rem;
+        color:var(--text-muted);
+        display:flex;
+        align-items:center;
+        gap:4px;
+      ">
+        📋 ${t.subtasks.length} subtarea${t.subtasks.length > 1 ? 's' : ''}
+      </div>
+    `;
+  }
+
+  // Elemento enlazado (opcional)
+  let linkHtml = '';
+  if (t.listIdx !== undefined && t.linkedItem) {
+    const list = allLists[t.listIdx];
+    if (list) {
+      linkHtml = `
+        <div style="
+          font-size:0.68rem;
+          color:var(--text-muted);
+          display:flex;
+          align-items:center;
+          gap:4px;
+        ">
+          🔗 ${t.linkedItem}
+        </div>
+      `;
+    }
+  }
+
+            const list = allLists[t.listIdx];
+      const item = list?.items.find(i => i.name === t.linkedItem);
+
+  taskPreview = `
+    <div style="
+      margin-top:12px;
+      padding:12px;
+      background:var(--bg-light);
+      border:1px solid var(--border-color);
+      border-radius:14px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    " onclick="event.stopPropagation(); window.location.href='task.html';">
+
+      <!-- Cabecera -->
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+          <div class="prio-dot ${prioClass}"></div>
+          <span class="linked-mini-home">${item?.img ? `<img src="${item.img}">` : '<img src="./build/todoloist.png">'}</span>
+          <span style="
+            font-size:0.85rem;
+            font-weight:700;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+          ">
+            ${t.title}
+          </span>
+        </div>
+
+      <!-- Botón -->
+      <button
+        style="
+          width:30%;
+          margin-top:4px;
+          padding:7px;
+          background:${isDone ? '#e5e7eb' : 'var(--primary-purple)'};
+          color:${isDone ? '#6b7280' : 'white'};
+          border:none;
+          border-radius:8px;
+          font-size:0.72rem;
+          font-weight:700;
+          cursor:${isDone ? 'not-allowed' : 'pointer'};
+        "
+        ${isDone ? 'disabled' : ''}
+        onclick="event.stopPropagation(); quickComplete(${msg.taskIdx})"
+      >
+        ${isDone ? 'Completada' : 'Marcar'}
+      </button>
+    </div>
+  `;
+}
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <img src="${userAvatar}" class="user-avatar-mini" style="width:24px; height:24px; border-radius:50%;">
+          <span class="msg-tag" style="font-size:0.6rem; background:var(--soft-purple); padding:2px 8px; border-radius:10px;">📌 FIJADO</span>
+        </div>
+        <h4 style="margin:0; font-size:0.9rem;">${msg.title}</h4>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 4px 0;">${msg.desc}</p>
+        ${taskPreview}
+      `;
+      slider.appendChild(card);
+    });
+
+  // --- 2. RENDERIZAR TAREAS DE HOY (LISTA DETALLADA) ---
+  const todayTasks = tasks.filter(t => t.date === todayStr);
+  
+  if(todayTasks.length === 0) {
+    taskContainer.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-top:20px;">No hay tareas pendientes para hoy</p>`;
+  }
+
+  todayTasks.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'home-card task-card-horizontal'; // <-- CAMBIAR A AQUÍ    
+
+    // Subtareas (máximo 2 para no alargar demasiado)
+    let subsHtml = '';
+    if (t.subtasks && t.subtasks.length > 0) {
+      subsHtml = `<div class="subtasks-preview">` + 
+        t.subtasks.slice(0, 2).map(s => `<div style="margin-bottom:2px;">◽ ${s}</div>`).join('') +
+        `</div>`;
+    }
+
+    // Elemento enlazado
+    let linkHtml = '';
+    if(t.listIdx !== undefined && t.linkedItem) {
+      const list = allLists[t.listIdx];
+      const item = list?.items.find(i => i.name === t.linkedItem);
+      linkHtml = `
+        <div class="linked-mini-home">
+          ${item?.img ? `<img src="${item.img}">` : '<img src="./build/todoloist.png">'}
+          <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <strong>${t.linkedItem}</strong> <span style="opacity:0.6; font-size:0.6rem;">en ${list?.name}</span>
+          </div>
+        </div>`;
+    }
+
+    const prioClass = `prio-${t.priority || 'low'}`;
+
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <img src="${userAvatar}" class="user-avatar-mini" style="width:24px; height:24px; border-radius:50%;">
+          <div class="prio-dot ${prioClass}"></div>
+          <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:${t.status === 'done' ? 'var(--success)' : 'var(--primary-purple)'}">
+            ${t.status === 'done' ? 'Hecha' : 'Hoy'}
+          </span>
+        </div>
+        <span style="font-size:0.75rem; font-weight:800; color:var(--primary-purple);">${t.time || ''}</span>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; margin:8px 0;">
+        <h4 style="margin:0; font-size:0.95rem; flex:1;">${t.title}</h4>
+        <div style="font-size:1rem;">${t.status === 'done' ? '✅' : '⭕'}</div>
+      </div>
+      
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 12px;">${t.desc || ''}</p>
+      ${linkHtml}
+
+      <a href="task.html" style="
+        display: inline-block;
+        margin-top: 12px;
+        padding: 6px 16px;
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+      " onmouseover="this.style.background='var(--soft-purple)'; this.style.color='var(--primary-purple)'; this.style.borderColor='var(--primary-purple)'" 
+        onmouseout="this.style.background='var(--bg-light)'; this.style.color='var(--text-muted)'; this.style.borderColor='var(--border-color)'">
+        Ver detalles →
+      </a>
+    `;
+    taskContainer.appendChild(card);
+  });
+}
+renderHome();
+  </script>
+</body>
+</html>

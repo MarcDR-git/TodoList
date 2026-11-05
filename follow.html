@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guía de Ayuda - ToListEI</title>
+    <style>
+        :root {
+            --bg-light: #fdfdfd;
+            --card-bg: #ffffff;
+            --primary-purple: #9061f9;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --soft-purple: #f3f0ff;
+            --border-color: #f3f4f6;
+            --radius: 20px;
+        }
+
+        body.dark {
+            --bg-light: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --soft-purple: #2d2d2d;
+            --border-color: #333333;
+        }
+
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-main);
+        }
+
+        body { display: flex; flex-direction: column; }
+
+        /* Header */
+         .header {
+            flex-shrink: 0; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center; 
+            padding: 15px 25px;
+            background: var(--card-bg); /* Fondo blanco puro */
+            border-bottom: 1px solid var(--border-color); /* Borde sutil solicitado */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03); /* Sombra suave tipo card */
+            z-index: 10;
+        }
+        .header h1 { font-size: 24px; font-weight: 800; color: #7c3aed; margin: 0; }
+        .profile-circle {
+            width: 45px; height: 45px;
+            background: var(--soft-purple);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; border: 2.5px solid var(--primary-purple);
+        }
+        .profile-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Scroll Area */
+        .scroll-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px 20px 100px 20px;
+            scrollbar-width: none;
+        }
+        .scroll-area::-webkit-scrollbar { display: none; }
+
+                /* Welcome Card (Basado en imagen) */
+                .welcome-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: var(--radius); padding: 18px; margin-bottom: 20px;
+            padding-top: 30;
+            padding-bottom: 30px;
+            margin-top: 20px;
+        }
+  .welcome-card img.icon-guia { width: 35px; margin-bottom: 10px; }
+  .welcome-card h2 { margin: 0 0 5px 0; font-size: 1.1rem; }
+  .welcome-card p { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px; }
+
+        /* Acordeón Estilo Imagen */
+        .guide-item {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .guide-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .guide-header h2 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            background: var(--soft-purple);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .guide-icon-arrow {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            transition: 0.3s;
+        }
+
+        /* Contenido desplegable */
+        .guide-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .guide-content-inner {
+            padding: 0 20px 25px 75px; /* Alineado con el texto del título */
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        
+        .guide-content-inner p { margin: 0 0 10px 0; }
+        .guide-content-inner ul { padding-left: 18px; margin: 0; }
+        .guide-content-inner li { margin-bottom: 8px; }
+        .guide-content-inner strong { color: var(--text-main); }
+
+        /* Estados Activos */
+        .guide-item.active {
+            border-color: rgba(144, 97, 249, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        }
+        .guide-item.active .guide-icon-arrow {
+            transform: rotate(180deg);
+            color: var(--primary-purple);
+        }
+        .guide-item.active .guide-content {
+            max-height: 800px;
+        }
+
+       /* Nav Inferior */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 75px; background: var(--card-bg);
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); padding-bottom: 15px;
+    z-index: 100;
+  }
+
+  .bottom-nav .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #f3f4f6; /* Círculo gris claro */
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    /* Transición suave para las animaciones */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  body.dark .bottom-nav .nav-icon {
+    background-color: #f3f4f6; /* Gris oscuro para modo noche */
+    border-color: #3f3f46;
+  }
+
+  /* Animación al pasar el cursor por encima (Hover) */
+  .bottom-nav .nav-icon:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  body.dark .bottom-nav .nav-icon:hover {
+    background-color: #383838;
+  }
+
+  /* Animación al hacer clic (Active) */
+  .bottom-nav .nav-icon:active {
+    transform: translateY(1px) scale(0.95);
+  }
+
+  .bottom-nav .nav-icon.active {
+    background: var(--soft-purple);
+    border-color: var(--primary-purple);
+  }
+
+  .bottom-nav .nav-icon img.icon-hod {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 0 !important;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+  }
+        .nav-icon {
+            text-decoration: none; font-size: 1.5rem; width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center; border-radius: 15px;
+            color: #aaa; transition: 0.2s;
+        }
+        .nav-icon.active { background: var(--soft-purple); color: var(--primary-purple); }
+        .btn-back {
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: var(--text-main); padding: 0; display: flex; align-items: center;
+        }
+        .icon-hod { width: 35px; margin-bottom: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+            <button class="btn-back" onclick="history.back()">←</button>
+        <h1>Guía de Ayuda</h1>
+        <div class="profile-circle" id="profileBtn">
+            <span id="initials">?</span>
+        </div>
+    </header>
+
+    <main class="scroll-area">
+        <section class="welcome-card">
+      <img src="/build/todolist.png" class="icon-guia" alt="icon">
+      <h2 id="welcome-text">Bienvenido a la guía</h2>
+            <p>ToListEl es una aplicación orientada a la administración de tareas y creación de lista de la vida cotidiana. No necesita conexión a internet ni expone datos personales, con el objetivo de dar una herramienta que se pueda usar en cualquier situación.</p>
+         </section>
+
+        <div id="accordion-container">
+            <!-- To-Do List -->
+            <div class="guide-item">
+                <div class="guide-header" onclick="toggleGuide(this)">
+                    <h2><div class="icon-box">📋</div> To-Do List</h2>
+                    <span class="guide-icon-arrow">▼</span>
+                </div>
+                <div class="guide-content">
+                    <div class="guide-content-inner">
+                        <p>Aquí puedes organizar tus listas de tareas por categorías. Cada lista es un contenedor independiente.</p>
+                        <ul>
+                            <li><strong>Crear Lista:</strong> Usa el botón "+" para añadir una nueva categoría (ej. "Trabajo", "Super").</li>
+                            <li><strong>Gestionar:</strong> Dentro de cada lista, puedes añadir elementos específicos.</li>
+                            <li><strong>Eliminar:</strong> Desliza o usa el icono de papelera para borrar listas completas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tareas -->
+            <div class="guide-item">
+                <div class="guide-header" onclick="toggleGuide(this)">
+                    <h2><div class="icon-box">✅</div> Tareas</h2>
+                    <span class="guide-icon-arrow">▼</span>
+                </div>
+                <div class="guide-content">
+                    <div class="guide-content-inner">
+                        <p>Gestión detallada de cada actividad pendiente.</p>
+                        <ul>
+                            <li><strong>Vincular:</strong> Puedes conectar una tarea con un elemento de tus listas To-Do.</li>
+                            <li><strong>Prioridad:</strong> Define qué tareas son urgentes.</li>
+                            <li><strong>Estado:</strong> Marca como "Hecha" o "Pendiente" para ver el progreso en la barra visual.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendario -->
+            <div class="guide-item">
+                <div class="guide-header" onclick="toggleGuide(this)">
+                    <h2><div class="icon-box">📅</div> Calendario</h2>
+                    <span class="guide-icon-arrow">▼</span>
+                </div>
+                <div class="guide-content">
+                    <div class="guide-content-inner">
+                        <p>Visualiza tus tareas de forma temporal para no perder ningún plazo.</p>
+                        <ul>
+                            <li><strong>Vista Mensual:</strong> Los días con tareas aparecen resaltados con un punto o color morado.</li>
+                            <li><strong>Selección:</strong> Toca un día para ver la lista de tareas específicas programadas para esa fecha.</li>
+                            <li><strong>Navegación:</strong> Cambia de mes o año usando los selectores superiores.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensajes Fijados -->
+            <div class="guide-item">
+                <div class="guide-header" onclick="toggleGuide(this)">
+                    <h2><div class="icon-box">📌</div> Mensajes Fijados</h2>
+                    <span class="guide-icon-arrow">▼</span>
+                </div>
+                <div class="guide-content">
+                    <div class="guide-content-inner">
+                        <p>Recordatorios importantes que aparecen directamente en tu pantalla de Inicio.</p>
+                        <ul>
+                            <li><strong>Fijar:</strong> Crea un mensaje y asígnale una tarea para que sea lo primero que veas al abrir la app.</li>
+                            <li><strong>Acceso Rápido:</strong> Tocar el mensaje te llevará directamente a la tarea vinculada.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Imágenes y Links -->
+            <div class="guide-item">
+                <div class="guide-header" onclick="toggleGuide(this)">
+                    <h2><div class="icon-box">🖼️</div> Imágenes y Links</h2>
+                    <span class="guide-icon-arrow">▼</span>
+                </div>
+                <div class="guide-content">
+                    <div class="guide-content-inner">
+                        <p>Haz que tus listas sean más visuales y útiles.</p>
+                        <ul>
+                            <li><strong>Imágenes:</strong> Al editar un ítem, pega la URL de una imagen para ver una previsualización en la tarjeta.</li>
+                            <li><strong>Enlaces:</strong> Añade links externos (como recetas o documentos) para abrir directamente desde la tarea.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Importar y Exportar -->
+            <div class="guide-item">
+                <div class="guide-header" onclick="toggleGuide(this)">
+                    <h2><div class="icon-box">💾</div> Importar y Exportar</h2>
+                    <span class="guide-icon-arrow">▼</span>
+                </div>
+                <div class="guide-content">
+                    <div class="guide-content-inner">
+                        <p>No pierdas nunca tu información o compártela con otros.</p>
+                        <ul>
+                            <li><strong>Exportar:</strong> Descarga tus listas en formato JSON para tener una copia de seguridad.</li>
+                            <li><strong>Importar:</strong> Sube un archivo JSON de ToListEI para restaurar tus tareas en cualquier dispositivo.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+    <a href="home.html" class="nav-icon" style="color:#9061f9">      
+      <img src="./build/home.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="todolist.html" class="nav-icon">
+      <img src="./build/list.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="task.html" class="nav-icon">
+      <img src="./build/campana.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="perfil.html" class="nav-icon">
+      <img src="./build/perfil.png" class="icon-hod" alt="icon">
+    </a>
+  </nav>
+
+    <script>
+        // Cargar modo oscuro
+        if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+
+        // Cargar Foto Perfil
+        const avatar = localStorage.getItem('user_avatar');
+        const username = localStorage.getItem('username') || 'U';
+        if (avatar) {
+            document.getElementById('profileBtn').innerHTML = `<img src="${avatar}" alt="Perfil">`;
+        } else {
+            document.getElementById('initials').innerText = username.charAt(0).toUpperCase();
+        }
+
+        function toggleGuide(header) {
+            const item = header.parentElement;
+            const isActive = item.classList.contains('active');
+            
+            // Cerrar otros
+            document.querySelectorAll('.guide-item').forEach(el => el.classList.remove('active'));
+            
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crear Nueva Lista</title>
+<style>
+  :root {
+    --bg-light: #f8f9fa;
+    --bg-dark: #121212;
+    --card-light: #ffffff;
+    --card-dark: #1e1e1e;
+    --primary: #6366f1;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --radius: 16px;
+  }
+
+  body { 
+    margin: 0; 
+    font-family: 'Inter', -apple-system, sans-serif; 
+    background: var(--bg-light); 
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    transition: background 0.3s;
+  }
+
+  body.dark { 
+    background: var(--bg-dark); 
+    color: #f3f4f6; 
+  }
+
+  .container {
+    width: 90%;
+    max-width: 400px;
+    background: var(--card-light);
+    padding: 30px;
+    border-radius: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    animation: slideUp 0.4s ease-out;
+  }
+
+  body.dark .container {
+    background: var(--card-dark);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+
+  h2 {
+    margin: 0 0 10px 0;
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.5px;
+    text-align: center;
+  }
+
+  p {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 25px;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 5px;
+  }
+
+  input, select { 
+    width: 100%; 
+    padding: 14px; 
+    margin: 8px 0 20px 0; 
+    border-radius: var(--radius); 
+    border: 1px solid #e5e7eb; 
+    background: #f9fafb;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 15px;
+    transition: border-color 0.2s;
+  }
+
+  body.dark input, body.dark select {
+    background: #2d2d2d;
+    border-color: #444;
+    color: white;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+
+  .btn-group {
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  button { 
+    width: 100%; 
+    padding: 14px; 
+    border-radius: var(--radius); 
+    border: none; 
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-create { 
+    background: var(--primary); 
+    color: white; 
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+
+  .btn-create:active { transform: scale(0.98); }
+
+  .btn-cancel { 
+    background: transparent; 
+    color: var(--text-muted); 
+    border: 1px solid #e5e7eb;
+  }
+
+  body.dark .btn-cancel { border-color: #444; }
+
+  .btn-cancel:hover { background: #fee2e2; color: #ef4444; border-color: transparent; }
+
+  @keyframes slideUp { 
+    from { opacity: 0; transform: translateY(30px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
+</style>
+</head>
+
+<body id="body">
+
+<div class="container">
+  <h2>Nueva Lista</h2>
+  <p>Organiza tus tareas con una nueva categoría.</p>
+
+  <label for="name">Nombre de la lista</label>
+  <input id="name" placeholder="Ej: Supermercado, Trabajo..." autocomplete="off"/>
+
+  <label for="type">Tipo de lista</label>
+  <select id="type">
+    <option value="element">Elementos con imágenes</option>
+    <option value="text">Solo texto plano</option>
+  </select>
+
+  <div class="btn-group">
+    <button class="btn-create" onclick="create()">Crear Lista</button>
+    <button class="btn-cancel" onclick="goBack()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+  // Detectar modo oscuro
+  const body = document.getElementById('body');
+  if(localStorage.getItem('darkMode') === 'true') body.classList.add('dark');
+
+  function create(){
+    const nameInput = document.getElementById('name');
+    const name = nameInput.value.trim();
+    const type = document.getElementById('type').value;
+
+    if(!name) {
+      nameInput.style.borderColor = '#ef4444';
+      return;
+    }
+
+    let lists = JSON.parse(localStorage.getItem('lists') || '[]');
+    lists.push({name, type, items: [], groups: ['Ninguno']});
+    
+    localStorage.setItem('lists', JSON.stringify(lists));
+    localStorage.setItem('currentList', lists.length - 1);
+    
+    location.href = 'list.html';
+  }
+
+  function goBack(){
+    location.href = 'todolist.html'; // O el nombre de tu archivo principal (home.html)
+  }
+
+  // Permitir crear con la tecla Enter
+  document.getElementById('name').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') create();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Perfil - ToListEI</title>
+<style>
+  :root {
+    --bg-light: #fdfdfd;
+    --card-bg: #ffffff;
+    --primary-purple: #9061f9;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --soft-purple: #f3f0ff;
+    --border-color: #f3f4f6;
+    --danger: #ef4444;
+    --radius: 20px;
+  }
+
+  /* Modo Oscuro */
+  body.dark {
+    --bg-light: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --soft-purple: #2d2d2d;
+    --border-color: #333333;
+  }
+
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-light); color: var(--text-main);
+    transition: background 0.3s;
+  }
+
+  body { display: flex; flex-direction: column; }
+
+  .header {
+    flex-shrink: 0; display: flex; align-items: center; padding: 20px 25px;
+  }
+
+  .header h1 { font-size: 24px; font-weight: 800; color: #7c3aed; margin: 0; }
+
+  .main-content {
+    flex: 1; padding: 0 25px; display: flex; flex-direction: column;
+    overflow-y: auto; padding-bottom: 100px;
+  }
+
+  /* Sección Avatar */
+  .profile-hero {
+    text-align: center; margin-bottom: 30px; position: relative;
+  }
+
+  .avatar-container {
+    width: 100px; height: 100px; margin: 0 auto 15px;
+    border-radius: 50%; border: 4px solid white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden; background: #e0e7ff; position: relative;
+  }
+
+  body.dark .avatar-container { border-color: #333; }
+
+  .avatar-container img { width: 100%; height: 100%; object-fit: cover; }
+  
+  .edit-overlay {
+    position: absolute; bottom: 0; right: calc(50% - 50px);
+    background: var(--primary-purple); color: white;
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg-light); cursor: pointer;
+  }
+
+  /* Lista de Datos */
+  .info-section { margin-bottom: 30px; }
+  .section-label { font-weight: 700; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; display: block; }
+
+  .data-item {
+    background: var(--card-bg); border: 1px solid rgba(0,0,0,0.05);
+    padding: 15px 20px; border-radius: 15px; margin-bottom: 10px;
+    display: flex; flex-direction: column; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  body.dark .data-item { border-color: #333; }
+
+  .data-content h4 { margin: 0 0 4px 0; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Campos de texto editables directamente */
+  .editable-input, .editable-textarea {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed transparent;
+    color: var(--text-main);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 6px 8px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: all 0.2s;
+  }
+
+  .editable-input:hover, .editable-textarea:hover,
+  .editable-input:focus, .editable-textarea:focus {
+    background: var(--soft-purple);
+    border-color: var(--primary-purple);
+    outline: none;
+  }
+
+  .editable-textarea {
+    resize: vertical;
+    min-height: 50px;
+  }
+
+  /* Ajustes y Peligro */
+  .settings-card {
+    background: var(--card-bg); border-radius: var(--radius); padding: 10px 20px;
+    border: 1px solid rgba(0,0,0,0.05); margin-bottom: 20px;
+  }
+  body.dark .settings-card { border-color: #333; }
+
+  .setting-row {
+    display: flex; justify-content: space-between; align-items: center; padding: 12px 0;
+  }
+
+  .btn-danger {
+    width: 100%; padding: 15px; border-radius: 15px; border: none;
+    background: #fee2e2; color: var(--danger); font-weight: 700;
+    cursor: pointer; margin-top: 10px; transition: 0.2s;
+  }
+  .btn-danger:active { background: #fecaca; transform: scale(0.98); }
+
+  /* Nav Inferior */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 75px; background: var(--card-bg);
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); padding-bottom: 15px;
+    z-index: 100;
+  }
+
+  .bottom-nav .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #f3f4f6; /* Círculo gris claro */
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    /* Transición suave para las animaciones */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  body.dark .bottom-nav .nav-icon {
+    background-color: #f3f4f6; /* Gris oscuro para modo noche */
+    border-color: #3f3f46;
+  }
+
+  /* Animación al pasar el cursor por encima (Hover) */
+  .bottom-nav .nav-icon:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  body.dark .bottom-nav .nav-icon:hover {
+    background-color: #383838;
+  }
+
+  /* Animación al hacer clic (Active) */
+  .bottom-nav .nav-icon:active {
+    transform: translateY(1px) scale(0.95);
+  }
+
+  .bottom-nav .nav-icon.active {
+    background: var(--soft-purple);
+    border-color: var(--primary-purple);
+  }
+
+  .bottom-nav .nav-icon img.icon-hod {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 0 !important;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+  }
+
+  .btn-back {
+    background: none; border: none; font-size: 24px; cursor: pointer;
+    color: var(--text-main); padding: 0; display: flex; align-items: center;
+  }
+</style>
+</head>
+<body id="body">
+
+  <header class="header">
+    <button class="btn-back" onclick="history.back()">←</button>
+    <h1 style="padding-left: 25px;">Perfil</h1>
+  </header>
+
+  <main class="main-content">
+    
+    <div class="profile-hero">
+      <div class="avatar-container" id="avatarBox">
+        <img id="displayAvatar" src="" style="display:none;">
+        <span id="avatarPlaceholder" style="font-size: 40px; line-height: 100px;">👤</span>
+      </div>
+      <div class="edit-overlay" onclick="editAvatar()" title="Cambiar foto de perfil">✏️</div>
+      <input type="file" id="fileInput" hidden accept="image/*" onchange="updateAvatar(event)">
+    </div>
+
+    <div class="info-section">
+      <span class="section-label">INFORMACIÓN PERSONAL</span>
+      
+      <!-- Edición directa Nombre -->
+      <div class="data-item">
+        <div class="data-content">
+          <h4>Nombre</h4>
+          <input type="text" id="val-name" class="editable-input" placeholder="Tu nombre" onchange="updateField('username', this.value)">
+        </div>
+      </div>
+
+      <!-- Edición directa Edad -->
+      <div class="data-item">
+        <div class="data-content">
+          <h4>Edad</h4>
+          <input type="text" id="val-age" class="editable-input" placeholder="Tu edad" onchange="updateField('user_age', this.value)">
+        </div>
+      </div>
+
+      <!-- Edición directa Descripción / Sobre mí -->
+      <div class="data-item">
+        <div class="data-content">
+          <h4>Sobre mí</h4>
+          <textarea id="val-desc" class="editable-textarea" placeholder="Escribe algo sobre ti..." onchange="updateField('user_desc', this.value)"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <span class="section-label">AJUSTES Y COPIAS DE SEGURIDAD</span>
+      <div class="settings-card">
+        <div class="setting-row">
+          <span>Modo Oscuro</span>
+          <button class="btn-edit" onclick="toggleTheme()" id="themeBtn" style="background:none; border:none; font-size:18px; cursor:pointer;">🌑</button>
+        </div>
+        
+        <div class="setting-row" style="border-top: 1px dashed var(--border-color); padding-top: 12px; margin-top: 5px;">
+          <span>Copia del Perfil (JSON)</span>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="exportProfile()" style="background:none; border:none; color:var(--primary-purple); font-weight:600; cursor:pointer; font-size: 14px;">📥 Exportar</button>
+            <button onclick="document.getElementById('importFileInput').click()" style="background:none; border:none; color:var(--primary-purple); font-weight:600; cursor:pointer; font-size: 14px;">📤 Importar</button>
+          </div>
+        </div>
+        <input type="file" id="importFileInput" style="display:none" accept=".json" onchange="importProfile(event)">
+
+        <div class="setting-row" style="border-top: 1px dashed var(--border-color); padding-top: 12px; margin-top: 5px;">
+          <span>Limpieza de Historial</span>
+          <button onclick="cleanOldData()" style="background:none; border:none; color: var(--danger); font-weight: 600; font-size: 13px; cursor:pointer;">🧹 Purgar Pasado</button>
+        </div>
+      </div>
+
+      <button class="btn-danger" onclick="resetApp()">Borrar todos los datos</button>
+    </div>
+
+  </main>
+
+  <!-- Barra inferior con el círculo gris claro integrado -->
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-icon">      
+      <img src="./build/home.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="todolist.html" class="nav-icon">
+      <img src="./build/list.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="task.html" class="nav-icon">
+      <img src="./build/campana.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="perfil.html" class="nav-icon active">
+      <img src="./build/perfil.png" class="icon-hod" alt="icon">
+    </a>
+  </nav>
+
+  <script>
+    // 1. CARGA DE DATOS AL INICIAR
+    function loadProfile() {
+      const name = localStorage.getItem('username') || '';
+      const age = localStorage.getItem('user_age') || '';
+      const desc = localStorage.getItem('user_desc') || '';
+      const avatar = localStorage.getItem('user_avatar');
+
+      document.getElementById('val-name').value = name;
+      document.getElementById('val-age').value = age;
+      document.getElementById('val-desc').value = desc;
+
+      if (avatar) {
+        document.getElementById('displayAvatar').src = avatar;
+        document.getElementById('displayAvatar').style.display = 'block';
+        document.getElementById('avatarPlaceholder').style.display = 'none';
+      }
+
+      // Cargar Tema
+      if(localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark');
+        document.getElementById('themeBtn').innerText = '☀️';
+      }
+    }
+
+    // 2. ACTUALIZACIÓN DIRECTA EN TEXTO (GUARDADO AUTOMÁTICO AL CAMBIAR O SALIR DEL CAMPO)
+    function updateField(key, value) {
+      localStorage.setItem(key, value.trim());
+    }
+
+    // 3. EDICIÓN DE AVATAR
+    function editAvatar() {
+      document.getElementById('fileInput').click();
+    }
+
+    function updateAvatar(event) {
+      const file = event.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function() {
+        localStorage.setItem('user_avatar', reader.result);
+        loadProfile();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 4. MODO OSCURO
+    function toggleTheme() {
+      const isDark = document.body.classList.toggle('dark');
+      localStorage.setItem('darkMode', isDark);
+      document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌑';
+    }
+
+    // 5. EXPORTAR PERFIL COMPLETO (LOCALSTORAGE)
+    function exportProfile() {
+      const backupData = {
+        username: localStorage.getItem('username'),
+        user_age: localStorage.getItem('user_age'),
+        user_desc: localStorage.getItem('user_desc'),
+        user_avatar: localStorage.getItem('user_avatar'),
+        darkMode: localStorage.getItem('darkMode'),
+        lists: localStorage.getItem('lists'),
+        user_tasks: localStorage.getItem('user_tasks'),
+        home_messages: localStorage.getItem('home_messages')
+      };
+
+      const dataStr = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `todolist_backup_perfil.json`;
+      document.body.appendChild(a);
+      a.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 0);
+    }
+
+    // 6. IMPORTAR Y SOBREESCRIBIR PERFIL
+    function importProfile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const confirmImport = confirm("⚠️ ¡ADVERTENCIA CRÍTICA!\n\nAl importar este archivo se ELIMINARÁ por completo tu perfil actual, tus listas, tareas y mensajes.\n\n¿Quieres proceder y vaciar los datos previos?");
+      
+      if (!confirmImport) {
+        event.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          
+          if (!imported.hasOwnProperty('username') && !imported.hasOwnProperty('lists')) {
+            throw new Error("Archivo no compatible");
+          }
+
+          localStorage.clear();
+
+          Object.keys(imported).forEach(key => {
+            if (imported[key] !== null && imported[key] !== undefined) {
+              localStorage.setItem(key, imported[key]);
+            }
+          });
+
+          alert("¡Perfil e Historial importados con éxito! Reiniciando la aplicación...");
+          location.reload();
+
+        } catch (e) {
+          alert("Error: El archivo JSON no es válido o está corrupto.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // 7. ELIMINAR TAREAS Y MENSAJES PREVIOS
+    function cleanOldData() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      
+      let tasks = JSON.parse(localStorage.getItem('user_tasks') || '[]');
+      let messages = JSON.parse(localStorage.getItem('home_messages') || '[]');
+
+      const oldTasksCount = tasks.filter(t => t.date && t.date < todayStr).length;
+      const oldMessagesCount = messages.length;
+
+      if (oldTasksCount === 0 && oldMessagesCount === 0) {
+        alert("¡Todo limpio! No hay tareas de días anteriores ni mensajes fijados que eliminar.");
+        return;
+      }
+
+      const confirmClean = confirm(`¿Quieres eliminar automáticamente:\n- ${oldTasksCount} tareas obsoletas de días anteriores?\n- ${oldMessagesCount} mensajes fijados actuales?\n\nEsta acción no se puede deshacer.`);
+      
+      if (confirmClean) {
+        const updatedTasks = tasks.filter(t => !t.date || t.date >= todayStr);
+        
+        localStorage.setItem('user_tasks', JSON.stringify(updatedTasks));
+        localStorage.setItem('home_messages', JSON.stringify([]));
+
+        alert(`¡Limpieza completada con éxito!\nSe eliminaron las tareas previas al ${todayStr} y se vaciaron los mensajes.`);
+      }
+    }
+
+    // 8. BORRADO SEGURO
+    function resetApp() {
+      const firstConfirm = confirm("⚠️ ¿ESTÁS SEGURO? Esto borrará todas tus listas, tareas y perfil de forma permanente.");
+      if (firstConfirm) {
+        const secondConfirm = confirm("🛑 ESTA ES LA ÚLTIMA ADVERTENCIA. ¿Realmente quieres eliminar TODO y reiniciar la aplicación?");
+        if (secondConfirm) {
+          localStorage.clear();
+          alert("Datos eliminados. Reiniciando...");
+          location.href = 'login.html';
+        }
+      }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

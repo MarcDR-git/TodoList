@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Estadísticas Avanzadas - ToListEI</title>
+<style>
+  :root {
+    --bg-light: #fdfdfd; --card-bg: #ffffff; --primary-purple: #9061f9;
+    --text-main: #111827; --text-muted: #6b7280; --success: #22c55e;
+    --danger: #ef4444; --warning: #f59e0b; --border-color: #f3f4f6; --radius: 20px;
+  }
+  body.dark {
+    --bg-light: #121212; --card-bg: #1e1e1e; --text-main: #f3f4f6;
+    --text-muted: #9ca3af; --border-color: #333;
+  }
+
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg-light); color: var(--text-main); }
+  body { display: flex; flex-direction: column; }
+
+  .header {
+    flex-shrink: 0; display: flex; align-items: center; padding: 15px 25px;
+    background: var(--card-bg); border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03); z-index: 10;
+  }
+  .btn-back { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main); padding: 0; display: flex; align-items: center; }
+  .header h1 { font-size: 24px; font-weight: 800; color: #7c3aed; margin: 0; padding-left: 25px; }
+
+  .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+
+  .stat-block { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+  .block-title { font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
+
+  /* --- Estilos de los Roscos (Donut Charts) --- */
+  .roscos-container { display: flex; justify-content: space-around; gap: 15px; margin-bottom: 10px; }
+  .rosco-wrapper { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  
+  .rosco {
+    width: 90px; height: 90px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; margin-bottom: 8px;
+    /* El background se calculará dinámicamente con JS usando conic-gradient */
+    background: conic-gradient(var(--border-color) 0deg, var(--border-color) 360deg);
+  }
+  /* Agujero central para hacer que parezca un rosco */
+  .rosco::before {
+    content: ""; position: absolute;
+    width: 66px; height: 66px; border-radius: 50%;
+    background: var(--card-bg);
+  }
+  .rosco-text { position: absolute; font-size: 0.95rem; font-weight: 800; color: var(--text-main); }
+  .rosco-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+
+  /* --- Barras de Prioridad --- */
+  .bar-row { margin-bottom: 12px; }
+  .bar-labels { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; }
+  .bar-container { width: 100%; height: 8px; background: #eee; border-radius: 5px; overflow: hidden; }
+  body.dark .bar-container { background: #333; }
+  .bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease-out; }
+
+  /* --- Calendario de Rendimiento Diario --- */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; background: var(--bg-light); padding: 8px; border-radius: 12px; }
+  body.dark .cal-grid { background: #181818; }
+  .cal-day {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: 8px; min-height: 48px; display: flex; flex-direction: column;
+    align-items: center; justify-content: space-between; padding: 4px 2px; box-sizing: border-box;
+  }
+  .cal-day-num { font-size: 0.75rem; font-weight: 700; }
+  .cal-day-count { font-size: 0.6rem; font-weight: 800; color: var(--text-muted); opacity: 0.8; }
+  
+  /* Mini barra inferior del día */
+  .cal-day-progress { width: 85%; height: 3px; background: #eee; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+  body.dark .cal-day-progress { background: #333; }
+  .cal-day-fill { height: 100%; background: var(--success); width: 0%; }
+
+/* Nav Inferior */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 75px; background: var(--card-bg);
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); padding-bottom: 15px;
+    z-index: 100;
+  }
+
+  .bottom-nav .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #f3f4f6; /* Círculo gris claro */
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    /* Transición suave para las animaciones */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  body.dark .bottom-nav .nav-icon {
+    background-color: #f3f4f6; /* Gris oscuro para modo noche */
+    border-color: #3f3f46;
+  }
+
+  /* Animación al pasar el cursor por encima (Hover) */
+  .bottom-nav .nav-icon:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  body.dark .bottom-nav .nav-icon:hover {
+    background-color: #383838;
+  }
+
+  /* Animación al hacer clic (Active) */
+  .bottom-nav .nav-icon:active {
+    transform: translateY(1px) scale(0.95);
+  }
+
+  .bottom-nav .nav-icon.active {
+    background: var(--soft-purple);
+    border-color: var(--primary-purple);
+  }
+
+  .bottom-nav .nav-icon img.icon-hod {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 0 !important;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+  }
+  .nav-icon { font-size: 22px; text-decoration: none; color: var(--text-main); }
+  .icon-hod { width: 35px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <button class="btn-back" onclick="history.back()">←</button>
+  <h1>Estadísticas</h1>
+</header>
+
+<main class="main-content">
+  
+  <div class="stat-block">
+    <div class="block-title">📊 Resumen de Objetivos (Completados)</div>
+    <div class="roscos-container">
+      
+      <div class="rosco-wrapper">
+        <div class="rosco" id="rosco-cal">
+          <span class="rosco-text" id="rosco-cal-txt">0%</span>
+        </div>
+        <span class="rosco-label">Calendario</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted);" id="sub-cal-txt">0/0 tareas</span>
+      </div>
+
+      <div class="rosco-wrapper">
+        <div class="rosco" id="rosco-list">
+          <span class="rosco-text" id="rosco-list-txt">0%</span>
+        </div>
+        <span class="rosco-label">Listas</span>
+        <span style="font-size: 0.65rem; color: var(--text-muted);" id="sub-list-txt">0/0 items</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="stat-block">
+    <div class="block-title">⚡ Carga de Trabajo por Prioridad</div>
+    
+    <div class="bar-row">
+      <div class="bar-labels">
+        <span>🔴 Alta</span>
+        <span id="prio-high-txt">0</span>
+      </div>
+      <div class="bar-container">
+        <div class="bar-fill" id="prio-high-bar" style="background: var(--danger); width: 0%;"></div>
+      </div>
+    </div>
+
+    <div class="bar-row" style="margin-top:12px;">
+      <div class="bar-labels">
+        <span>🟡 Media</span>
+        <span id="prio-medium-txt">0</span>
+      </div>
+      <div class="bar-container">
+        <div class="bar-fill" id="prio-medium-bar" style="background: var(--warning); width: 0%;"></div>
+      </div>
+    </div>
+
+    <div class="bar-row" style="margin-top:12px;">
+      <div class="bar-labels">
+        <span>🟢 Baja</span>
+        <span id="prio-low-txt">0</span>
+      </div>
+      <div class="bar-container">
+        <div class="bar-fill" id="prio-low-bar" style="background: var(--success); width: 0%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-block">
+    <div class="block-title">📅 Rendimiento Diario del Mes Activo</div>
+    <p style="font-size: 0.7rem; color: var(--text-muted); margin: -10px 0 15px 0;">Muestra: [Nº Día] • [Hechas/Totales] • Barra de %</p>
+    <div class="cal-grid" id="statsCalendarGrid"></div>
+  </div>
+
+</main>
+
+<nav class="bottom-nav">
+  <a href="home.html" class="nav-icon">      
+    <img src="./build/home.png" class="icon-hod" alt="home">
+  </a>
+  <a href="todolist.html" class="nav-icon">
+    <img src="./build/list.png" class="icon-hod" alt="list">
+  </a>
+  <a href="task.html" class="nav-icon">
+    <img src="./build/campana.png" class="icon-hod" alt="tasks">
+  </a>
+  <a href="perfil.html" class="nav-icon">
+    <img src="./build/perfil.png" class="icon-hod" alt="profile">
+  </a>
+</nav>
+
+<script>
+if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+
+function renderStats() {
+  const calendarTasks = JSON.parse(localStorage.getItem('user_tasks') || '[]');
+  const listsData = JSON.parse(localStorage.getItem('lists') || '[]');
+
+  // ==========================================
+  // 1. CÁLCULO ROSCO CALENDARIO
+  // ==========================================
+  const totalCal = calendarTasks.length;
+  const calDone = calendarTasks.filter(t => t.status === 'done').length;
+  const pctCal = totalCal > 0 ? Math.round((calDone / totalCal) * 100) : 0;
+
+  document.getElementById('rosco-cal-txt').innerText = `${pctCal}%`;
+  document.getElementById('sub-cal-txt').innerText = `${calDone}/${totalCal} tareas`;
+  // Truco CSS dinámico: Pintamos los grados equivalentes al porcentaje en color verde success
+  const degreesCal = (pctCal / 100) * 360;
+  document.getElementById('rosco-cal').style.background = `conic-gradient(var(--success) ${degreesCal}deg, var(--border-color) ${degreesCal}deg)`;
+
+  // ==========================================
+  // 2. CÁLCULO ROSCO LISTAS
+  // ==========================================
+  let totalListItems = 0;
+  let listItemsDone = 0;
+  listsData.forEach(list => {
+    if(list.items && Array.isArray(list.items)) {
+      totalListItems += list.items.length;
+      listItemsDone += list.items.filter(item => item.done).length;
+    }
+  });
+  const pctList = totalListItems > 0 ? Math.round((listItemsDone / totalListItems) * 100) : 0;
+
+  document.getElementById('rosco-list-txt').innerText = `${pctList}%`;
+  document.getElementById('sub-list-txt').innerText = `${listItemsDone}/${totalListItems} items`;
+  const degreesList = (pctList / 100) * 360;
+  // Usamos el color corporativo purple para este segundo rosco
+  document.getElementById('rosco-list').style.background = `conic-gradient(var(--primary-purple) ${degreesList}deg, var(--border-color) ${degreesList}deg)`;
+
+  // ==========================================
+  // 3. SECCIÓN PRIORIDADES
+  // ==========================================
+  const prioHigh = calendarTasks.filter(t => t.priority === 'high').length;
+  const prioMed = calendarTasks.filter(t => t.priority === 'medium').length;
+  const prioLow = calendarTasks.filter(t => t.priority === 'low').length;
+  const maxPrioVal = Math.max(prioHigh, prioMed, prioLow, 1); 
+
+  document.getElementById('prio-high-txt').innerText = prioHigh;
+  document.getElementById('prio-high-bar').style.width = `${(prioHigh / maxPrioVal) * 100}%`;
+  document.getElementById('prio-medium-txt').innerText = prioMed;
+  document.getElementById('prio-medium-bar').style.width = `${(prioMed / maxPrioVal) * 100}%`;
+  document.getElementById('prio-low-txt').innerText = prioLow;
+  document.getElementById('prio-low-bar').style.width = `${(prioLow / maxPrioVal) * 100}%`;
+
+  // ==========================================
+  // 4. NUEVO: CONSTRUIR EL CALENDARIO DE PROGRESO
+  // ==========================================
+  const grid = document.getElementById('statsCalendarGrid');
+  grid.innerHTML = '';
+
+  // Obtenemos el mes y año actuales reales
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+  const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  // Rellenar huecos iniciales de la semana
+  for(let i = 0; i < (firstDayIndex === 0 ? 6 : firstDayIndex - 1); i++) {
+    grid.innerHTML += '<div></div>';
+  }
+
+  // Dibujar cada día con sus porcentajes individuales
+  for(let i = 1; i <= totalDaysInMonth; i++) {
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    
+    // Filtrar tareas que caen exclusivamente en este día
+    const dayTasks = calendarTasks.filter(t => t.date === dateStr);
+    const dayTasksDone = dayTasks.filter(t => t.status === 'done').length;
+    
+    const totalDayCount = dayTasks.length;
+    const dayPct = totalDayCount > 0 ? Math.round((dayTasksDone / totalDayCount) * 100) : 0;
+
+    // Crear la celda
+    const dayEl = document.createElement('div');
+    dayEl.className = 'cal-day';
+    
+    // Si hoy es este día, le damos un borde destacado discreto
+    if(i === now.getDate()) {
+      dayEl.style.borderColor = 'var(--primary-purple)';
+    }
+
+    dayEl.innerHTML = `
+      <span class="cal-day-num">${i}</span>
+      <span class="cal-day-count">${totalDayCount > 0 ? `${dayTasksDone}/${totalDayCount}` : '-'}</span>
+      <div class="cal-day-progress">
+        <div class="cal-day-fill" style="width: ${dayPct}%; background: ${dayPct === 100 ? 'var(--success)' : 'var(--primary-purple)'}"></div>
+      </div>
+    `;
+    
+    grid.appendChild(dayEl);
+  }
+}
+
+renderStats();
+</script>
+</body>
+</html>

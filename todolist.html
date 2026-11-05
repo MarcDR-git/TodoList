@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mis Listas - ToListEI</title>
+<style>
+  :root {
+    --bg-light: #f8f9fa;
+    --bg-dark: #121212;
+    --card-light: #ffffff;
+    --card-dark: #1e1e1e;
+    --primary: #6366f1;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --radius: 20px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Ajuste de layout para incluir la barra inferior como en home.html */
+  html, body { 
+    margin: 0; 
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; 
+    font-family: 'Inter', -apple-system, sans-serif; 
+    background: var(--bg-light); 
+    color: var(--text-main);
+    transition: background 0.3s;
+  }
+
+  body { display: flex; flex-direction: column; }
+
+  body.dark { background: var(--bg-dark); color: #f3f4f6; }
+
+  /* Header actualizado con flecha atrás y sin botones de modo/salir */
+  .header { 
+    flex-shrink: 0;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 16px 20px; 
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    z-index: 100;
+  }
+
+  body.dark .header { background: rgba(18, 18, 18, 0.8); border-bottom: 1px solid #333; }
+
+  .header-left { display: flex; align-items: center; gap: 15px; }
+  
+ .btn-back {
+            background: none; border: none; font-size: 24px; cursor: pointer;
+            color: var(--text-main); padding: 0; display: flex; align-items: center;
+        }
+
+  .header span {
+    font-weight: 800; font-size: 1.4rem; letter-spacing: -0.5px;
+    background: linear-gradient(45deg, var(--primary), #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .nav-btns { display: flex; gap: 8px; }
+  .nav-btns button { 
+    border: none; width: 40px; height: 40px; border-radius: 12px; 
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; transition: 0.2s; background: #eee;
+  }
+  body.dark .nav-btns button { background: #2d2d2d; color: #eee; }
+
+  /* Contenedor de listas con scroll independiente */
+  #lists-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #lists { max-width: 600px; margin: 0 auto; display: grid; gap: 16px; }
+
+  .card { 
+    background: var(--card-light); padding: 16px 20px; border-radius: var(--radius); 
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; box-shadow: var(--shadow); transition: all 0.2s;
+    border: 1px solid transparent; animation: fadeIn 0.4s ease-out;
+  }
+  body.dark .card { background: var(--card-dark); border-color: #333; }
+  .card:hover { transform: scale(1.01); border-color: var(--primary); }
+
+  .card-info { display: flex; flex-direction: column; flex-grow: 1; }
+  .card-name { font-weight: 700; font-size: 1.1rem; }
+  .card-count { font-size: 0.85rem; color: var(--text-muted); }
+
+  .card-actions { display: flex; gap: 8px; margin-left: 15px; }
+  .btn-action { 
+    border: none; width: 38px; height: 38px; border-radius: 10px; 
+    cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+    background: #f3f4f6; color: var(--text-muted);
+  }
+  body.dark .btn-action { background: #2d2d2d; }
+  
+  .btn-export-item:hover { background: var(--success); color: white; }
+  .btn-delete-item:hover { background: var(--danger); color: white; }
+
+  .fab { 
+    position: fixed; bottom: 100px; right: 30px; width: 60px; height: 60px; 
+    border-radius: 50%; border: none; background: var(--primary); color: white; 
+    font-size: 32px; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+    cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+    z-index: 90;
+  }
+  .fab:hover { transform: rotate(90deg) scale(1.1); }
+
+  /* Nav Inferior */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 75px; background: var(--card-bg);
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); padding-bottom: 15px;
+    z-index: 100;
+  }
+
+  .bottom-nav .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: #f3f4f6; /* Círculo gris claro */
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    /* Transición suave para las animaciones */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  body.dark .bottom-nav .nav-icon {
+    background-color: #f3f4f6; /* Gris oscuro para modo noche */
+    border-color: #3f3f46;
+  }
+
+  /* Animación al pasar el cursor por encima (Hover) */
+  .bottom-nav .nav-icon:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: #e5e7eb;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  body.dark .bottom-nav .nav-icon:hover {
+    background-color: #383838;
+  }
+
+  /* Animación al hacer clic (Active) */
+  .bottom-nav .nav-icon:active {
+    transform: translateY(1px) scale(0.95);
+  }
+
+  .bottom-nav .nav-icon.active {
+    background: var(--soft-purple);
+    border-color: var(--primary-purple);
+  }
+
+  .bottom-nav .nav-icon img.icon-hod {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 0 !important;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+  }
+  .nav-icon { font-size: 22px; cursor: pointer; text-decoration: none; color: var(--text-main); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .icon-hod { width: 35px; margin-bottom: 10px; }
+
+</style>
+</head>
+<body id="body">
+
+<div class="header">
+  <div class="header-left">
+    <button class="btn-back" style="padding-right: 20px;" onclick="location.href='home.html'">←</button>
+    <span>Mis listas</span>
+  </div>
+  <div class="nav-btns">
+    <button title="Importar lista externa" onclick="document.getElementById('fileInput').click()">📤</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" style="display:none" onchange="importList(event)">
+
+<div id="lists-container">
+  <div id="lists"></div>
+</div>
+
+<button class="fab" onclick="location.href='create.html'">+</button>
+
+<nav class="bottom-nav">
+    <a href="home.html" class="nav-icon" style="color:#9061f9">      
+      <img src="./build/home.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="todolist.html" class="nav-icon">
+      <img src="./build/list.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="task.html" class="nav-icon">
+      <img src="./build/campana.png" class="icon-hod" alt="icon">
+    </a>
+    <a href="perfil.html" class="nav-icon">
+      <img src="./build/perfil.png" class="icon-hod" alt="icon">
+    </a>
+  </nav>
+
+<script>
+const body = document.getElementById('body');
+// Mantiene el modo oscuro si está activado globalmente
+if(localStorage.getItem('darkMode') === 'true') body.classList.add('dark');
+
+function load(){
+  const lists = JSON.parse(localStorage.getItem('lists') || '[]');
+  const container = document.getElementById('lists'); 
+  container.innerHTML = '';
+
+  if(lists.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>📝 Sin listas</h3><p>Crea una nueva para empezar.</p></div>`;
+    return;
+  }
+
+  lists.forEach((l, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openList(i);
+    const total = l.items.length;
+    const completados = l.items.filter(item => item.done).length;
+    const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
+
+    card.innerHTML = `
+      <div class="card-info">
+        <span class="card-name">${l.name}</span>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+            <div style="flex-grow:1; height:6px; background:#eee; border-radius:3px; overflow:hidden;">
+                <div style="width:${porcentaje}%; height:100%; background:var(--primary); transition:0.3s;"></div>
+            </div>
+            <span class="card-count">${porcentaje}%</span>
+        </div>
+        <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+            ${completados}/${total} completados
+        </span>
+      </div>
+      <div class="card-actions">
+        <button class="btn-action btn-export-item" title="Exportar esta lista" onclick="event.stopPropagation(); quickExport(${i})">📥</button>
+        <button class="btn-action btn-delete-item" title="Eliminar" onclick="event.stopPropagation(); deleteList(${i})">✕</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function openList(i){
+  localStorage.setItem('currentList', i);
+  location.href = 'list.html';
+}
+
+function quickExport(index) {
+  const lists = JSON.parse(localStorage.getItem('lists') || '[]');
+  const listToExport = lists[index];
+  if(!listToExport) return;
+
+  const data = JSON.stringify(listToExport, null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = listToExport.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  a.download = `lista_${safeName}.json`; 
+  
+  document.body.appendChild(a);
+  a.click();
+  
+  setTimeout(() => {
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }, 0);
+}
+
+function deleteList(i){
+  if(confirm('¿Eliminar esta lista definitivamente?')){
+    let l = JSON.parse(localStorage.getItem('lists'));
+    l.splice(i, 1);
+    localStorage.setItem('lists', JSON.stringify(l));
+    load();
+  }
+}
+
+function importList(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const imported = JSON.parse(evt.target.result);
+      if(!imported.name || !imported.items) throw new Error();
+      let lists = JSON.parse(localStorage.getItem('lists') || '[]');
+      lists.push(imported);
+      localStorage.setItem('lists', JSON.stringify(lists));
+      load();
+    } catch { alert('Archivo de lista no válido.'); }
+  };
+  reader.readAsText(file);
+}
+
+load();
+</script>
+</body>
+</html>

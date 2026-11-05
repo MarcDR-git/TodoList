@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modern To-Do List</title>
+<style>
+  :root {
+    --bg-light: #f8f9fa;
+    --bg-dark: #121212;
+    --card-light: #ffffff;
+    --card-dark: #1e1e1e;
+    --primary: #6366f1;
+    --accent: #10b981;
+    --danger: #ef4444;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --radius: 16px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  body { 
+    margin: 0; font-family: 'Inter', -apple-system, sans-serif; 
+    background: var(--bg-light); color: var(--text-main);
+    transition: background 0.3s; line-height: 1.5;
+  }
+  body.dark { background: var(--bg-dark); color: #f3f4f6; }
+
+  /* --- Header & Search --- */
+  .header { 
+    padding: 16px 20px; background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05);
+    position: sticky; top: 0; z-index: 100;
+  }
+  body.dark .header { background: rgba(18, 18, 18, 0.8); border-bottom: 1px solid #333; }
+
+  .header-top { display: flex; align-items: center; margin-bottom: 12px; }
+  .back-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: inherit; margin-right: 12px; }
+  #title { font-weight: 800; font-size: 1.2rem; flex: 1; }
+
+  .search-bar {
+    width: 100%; padding: 10px 15px; border-radius: 12px;
+    border: 1px solid #e5e7eb; background: #f3f4f6; box-sizing: border-box;
+    font-size: 14px; outline: none;
+  }
+  body.dark .search-bar { background: #2d2d2d; border-color: #444; color: white; }
+
+  /* --- Filtros --- */
+  .filters { display: flex; gap: 8px; padding: 15px 20px; overflow-x: auto; }
+  .filters button { 
+    flex: 1; padding: 10px 16px; border-radius: 20px; border: none; cursor: pointer; 
+    background: #e5e7eb; font-size: 13px; font-weight: 600; color: var(--text-muted);
+  }
+  .filters button.active { background: var(--primary); color: white; }
+  body.dark .filters button { background: #2d2d2d; }
+
+  /* --- Items --- */
+  .container { padding: 0 20px 100px 20px; max-width: 600px; margin: 0 auto; }
+  .group { margin-top: 24px; }
+  .group-title { 
+    font-weight: 700; font-size: 12px; text-transform: uppercase; 
+    color: var(--text-muted); margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .group-actions { display: flex; gap: 8px; font-size: 14px; }
+  .group-actions span { cursor: pointer; opacity: 0.7; }
+  .group-actions span:hover { opacity: 1; color: var(--primary); }
+
+  .item { 
+    background: var(--card-light); margin-bottom: 12px; padding: 14px; 
+    border-radius: var(--radius); display: flex; gap: 12px; align-items: center; 
+    box-shadow: var(--shadow); transition: 0.2s;
+  }
+  body.dark .item { background: var(--card-dark); }
+  .item.done { opacity: 0.6; }
+  .item.done b { text-decoration: line-through; }
+
+  .item-content { flex: 1; cursor: pointer; }
+  .item-content b { display: block; font-size: 15px; }
+  .item-content span { font-size: 13px; color: var(--text-muted); display: block; }
+  .item-date { font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 4px; }
+
+  .actions { display: flex; gap: 4px; }
+  .actions button { border: none; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .btn-check { background: #dcfce7; color: #166534; }
+  .btn-edit { background: #f3f4f6; color: #374151; }
+  .btn-delete { background: #fee2e2; color: #991b1b; }
+
+  .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 30px; cursor: pointer; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); }
+
+  /* --- Modal --- */
+  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: flex-end; z-index: 200; backdrop-filter: blur(4px); }
+  .modalContent { background: var(--card-light); padding: 24px; border-radius: 24px 24px 0 0; width: 100%; max-width: 500px; animation: slideUp 0.3s ease-out; box-sizing: border-box; }
+  body.dark .modalContent { background: var(--card-dark); }
+
+  input, select { width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; background: #f9fafb; box-sizing: border-box; font-family: inherit; }
+  body.dark input, body.dark select { background: #2d2d2d; border-color: #444; color: white; }
+
+  .modal-btns { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-save { background: var(--primary); color: white; grid-column: span 2; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+  .btn-cancel { background: #eee; color: #444; border: none; border-radius: 12px; cursor: pointer; }
+  .btn-group { background: #f3f4f6; color: var(--primary); font-weight: 600; border: none; border-radius: 12px; cursor: pointer; }
+
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  ::-webkit-scrollbar { width: 0px; }
+  .icon-hod { width: 35px; margin-bottom: 10px; }
+
+</style>
+</head>
+<body id="body">
+
+<div class="header">
+  <div class="header-top">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <span id="title">Cargando...</span>
+  </div>
+  <input type="text" id="searchInput" class="search-bar" placeholder="Buscar tareas..." oninput="render()">
+</div>
+
+<div class="filters">
+  <button id="filterAll" class="active" onclick="setFilter('all')">Todos</button>
+  <button id="filterPending" onclick="setFilter('pending')">Pendientes</button>
+  <button id="filterDone" onclick="setFilter('done')">Hechos</button>
+</div>
+
+<div class="container" id="items"></div>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<div class="modal" id="modal">
+  <div class="modalContent">
+    <h3 id="modalTitle" style="margin-top:0">Detalles de tarea</h3>
+    <div id="form"></div>
+  </div>
+</div>
+
+<script>
+const body = document.getElementById('body');
+if(localStorage.getItem('darkMode') === 'true') body.classList.add('dark');
+
+let lists = JSON.parse(localStorage.getItem('lists')) || [{name: 'Mi Lista', items: [], groups: ['Ninguno']}];
+const index = localStorage.getItem('currentList') || 0;
+const list = lists[index];
+
+if(!list.groups) list.groups = ['Ninguno'];
+if(!list.groups.includes('Ninguno')) list.groups.unshift('Ninguno');
+
+document.getElementById('title').innerText = list.name;
+
+let filter = 'all';
+let groupVisibility = {};
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+  render();
+}
+
+function render() {
+  const c = document.getElementById('items'); 
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  c.innerHTML = '';
+
+  list.groups.forEach((group, gIdx) => {
+    if(!groupVisibility.hasOwnProperty(group)) groupVisibility[group] = true;
+
+    const itemsInGroup = list.items.filter(it => (it.group || 'Ninguno') === group)
+      .filter(it => {
+        const matchesSearch = it.name?.toLowerCase().includes(query) || it.desc?.toLowerCase().includes(query);
+        if(!matchesSearch) return false;
+        if(filter === 'all') return true;
+        return filter === 'done' ? it.done : !it.done;
+      });
+
+    if (itemsInGroup.length === 0 && filter !== 'all' && query === "") return;
+
+    const gDiv = document.createElement('div');
+    gDiv.className = 'group';
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'group-title';
+    
+    // Si el grupo es "Ninguno", no permitimos renombrarlo por seguridad estructural
+    let renameAction = group !== 'Ninguno' 
+      ? `<span onclick="enableGroupInlineEdit(${gIdx}, '${group}')" title="Editar nombre">✎</span>` 
+      : '';
+
+    titleDiv.innerHTML = `
+      <span id="group-title-text-${gIdx}">${group}</span>
+      <div class="group-actions">
+        <span onclick="moveGroup(${gIdx}, -1)">▲</span>
+        <span onclick="moveGroup(${gIdx}, 1)">▼</span>
+        ${renameAction}
+        <span onclick="toggleGroup('${group}')">${groupVisibility[group]?'Ocultar':'Mostrar'}</span>
+        ${group!=='Ninguno'?`<span onclick="deleteGroup('${group}')" style="color:var(--danger)">✕</span>`:''}
+      </div>
+    `;
+    gDiv.appendChild(titleDiv);
+
+    if(groupVisibility[group]) {
+      itemsInGroup.forEach(it => gDiv.appendChild(createItem(it)));
+    }
+    c.appendChild(gDiv);
+  });
+}
+
+// NUEVA FUNCIÓN: Edición en línea fluida del grupo sin usar prompt()
+function enableGroupInlineEdit(gIdx, oldName) {
+  const spanEl = document.getElementById(`group-title-text-${gIdx}`);
+  if (!spanEl) return;
+
+  // Creamos un input temporal de tipo texto correctamente
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = oldName;
+  input.style.cssText = "padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 6px; border: 1px solid var(--primary); background: var(--card-light); color: inherit; width: 150px; outline: none;";
+
+  spanEl.innerHTML = '';
+  spanEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  // Guardar al perder el foco (blur) o pulsar Enter
+  const saveNewName = () => {
+    const newName = input.value.trim();
+    if (newName && newName !== oldName) {
+      if (list.groups.includes(newName)) {
+        alert("Ese nombre de grupo ya existe");
+        spanEl.innerText = oldName;
+        return;
+      }
+      list.groups = list.groups.map(g => g === oldName ? newName : g);
+      list.items.forEach(it => { if(it.group === oldName) it.group = newName; });
+      save();
+    } else {
+      spanEl.innerText = oldName;
+    }
+  };
+
+  input.addEventListener('blur', saveNewName);
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      input.blur();
+    }
+  });
+}
+// FUNCIONES DE GRUPOS
+function toggleGroup(g){ groupVisibility[g]=!groupVisibility[g]; render(); }
+
+function moveGroup(idx, direction) {
+  const newIdx = idx + direction;
+  if(newIdx < 0 || newIdx >= list.groups.length) return;
+  const temp = list.groups[idx];
+  list.groups[idx] = list.groups[newIdx];
+  list.groups[newIdx] = temp;
+  save();
+}
+
+function renameGroup(oldName) {
+  const newName = prompt("Nuevo nombre para el grupo:", oldName);
+  if(newName && newName !== oldName) {
+    if(list.groups.includes(newName)) return alert("Ese nombre ya existe");
+    list.groups = list.groups.map(g => g === oldName ? newName : g);
+    list.items.forEach(it => { if(it.group === oldName) it.group = newName; });
+    save();
+  }
+}
+
+function deleteGroup(g){
+  if(confirm(`¿Eliminar grupo "${g}"? Las tareas pasarán a "Ninguno"`)){
+    list.items.forEach(it=>{ if(it.group===g) it.group='Ninguno'; });
+    list.groups = list.groups.filter(gr => gr !== g);
+    save();
+  }
+}
+
+// FUNCIONES DE TAREAS
+function openLink(link){ if(link) window.open(link.startsWith('http')?link:'https://'+link, '_blank'); }
+function toggle(i){ list.items[i].done = !list.items[i].done; save(); }
+function deleteItem(i){ if(confirm('¿Eliminar?')){ list.items.splice(i,1); save(); } }
+function editItem(i){ openModal(list.items[i]); }
+
+function save(){
+  lists[index] = list;
+  localStorage.setItem('lists', JSON.stringify(lists));
+  render();
+}
+function openModal(it = null){
+  document.getElementById('modal').style.display = 'flex';
+  const form = document.getElementById('form');
+  
+  form.innerHTML = `
+    <div id="main-form">
+      <input id="name" placeholder="Título de la tarea" value="${it?it.name:''}">
+      <input id="desc" placeholder="Descripción corta" value="${it?it.desc:''}">
+      <input id="date" type="date" value="${it?it.date:''}">
+      
+      <div style="display: flex; gap: 8px; align-items: flex-end;">
+        <div style="flex: 1;">
+          <input id="img" placeholder="URL de imagen o archivo subido" value="${it?it.img:''}">
+        </div>
+        <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileUpload()">
+        <button type="button" onclick="document.getElementById('file-input').click()" style="padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; background: #6366f1; color: white; cursor: pointer; height: 45px; font-weight: 600; font-size: 14px; box-sizing: border-box; margin-top: 12px; white-space: nowrap;">📁 Subir PC</button>
+      </div>
+
+      <label style="font-size:12px; font-weight:700; color:var(--text-muted); margin-top:12px; display:block;">VINCULAR A:</label>
+      <select id="link-type" onchange="updateLinkUI()">
+        <option value="none" ${!it || !it.linkType || it.linkType==='none' ? 'selected' : ''}>Ninguno (Sin enlace)</option>
+        <option value="url" ${it && it.linkType==='url' ? 'selected' : ''}>🔗 URL / Web Externa</option>
+        <option value="list" ${it && it.linkType==='list' ? 'selected' : ''}>📂 Toda una Lista entera</option>
+        <option value="item" ${it && it.linkType==='item' ? 'selected' : ''}>🎯 Una Tarea específica</option>
+      </select>
+
+      <div id="link-url-container" style="display:none;">
+        <input id="link-url" placeholder="Ej: google.com o https://..." value="${it && it.linkType==='url' ? it.linkValue : ''}">
+      </div>
+
+      <div id="link-list-container" style="display:none;">
+        <select id="link-list-select" style="margin-top:8px;">
+          ${lists.map((l, idx) => `<option value="${idx}" ${it && it.linkType==='list' && it.linkValue==String(idx) ? 'selected':''}>${l.name}</option>`).join('')}
+        </select>
+      </div>
+
+      <div id="link-item-container" style="display:none;">
+        <select id="link-item-select" style="margin-top:8px;">
+          ${lists.flatMap((l, lIdx) => 
+            l.items.map((item, iIdx) => `
+              <option value="${lIdx}_${iIdx}" ${it && it.linkType==='item' && it.linkValue===(lIdx+'_'+iIdx) ? 'selected':''}>
+                [${l.name}] → ${item.name}
+              </option>
+            `)
+          ).join('')}
+        </select>
+      </div>
+      <label style="font-size:12px; font-weight:700; color:var(--text-muted); margin-top:12px; display:block;">GRUPO:</label>
+      <select id="group-select">${list.groups.map(g=>`<option ${it&&g===it.group?'selected':''}>${g}</option>`).join('')}</select>
+      
+      <div class="modal-btns">
+        <button class="btn-save" onclick="${it?'saveEdit('+list.items.indexOf(it)+')':'addElement()'}">${it?'Guardar Cambios':'Añadir Tarea'}</button>
+        <button class="btn-group" onclick="newGroup()">+ Nuevo Grupo</button>
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+
+    <div id="group-form" style="display:none; margin-top:10px; border-top:1px solid #eee; padding-top:15px;">
+      <label style="font-size:12px; font-weight:700; color:var(--primary)">NUEVO GRUPO</label>
+      <input id="new-group-name" placeholder="Ej: Compras, Trabajo...">
+      <div class="modal-btns">
+        <button class="btn-save" onclick="confirmNewGroup()">Crear Grupo</button>
+        <button class="btn-cancel" onclick="cancelNewGroup()">Volver</button>
+      </div>
+    </div>
+  `;
+  
+  // Actualiza la visibilidad de los inputs según lo que estuviera guardado
+  updateLinkUI();
+}
+
+// Controla qué inputs se muestran en el modal según el tipo de vínculo elegido
+function updateLinkUI() {
+  const type = document.getElementById('link-type').value;
+  document.getElementById('link-url-container').style.display = type === 'url' ? 'block' : 'none';
+  document.getElementById('link-list-container').style.display = type === 'list' ? 'block' : 'none';
+  document.getElementById('link-item-container').style.display = type === 'item' ? 'block' : 'none';
+}
+
+function createItem(it) {
+  const i = list.items.indexOf(it);
+  const d = document.createElement('div');
+  d.className = 'item ' + (it.done ? 'done' : '');
+  d.id = 'item-element-' + i; // ID necesario para el auto-scroll posterior
+
+  // Añadimos etiquetas visuales discretas según el tipo de link
+  let badge = '';
+  if (it.linkType === 'list') badge = '📂 <i>Ir a Lista</i>';
+  else if (it.linkType === 'item') badge = '🎯 <i>Ir a Tarea</i>';
+  else if (it.linkType === 'url') badge = '🔗 <i>Enlace</i>';
+
+  d.innerHTML = `
+    ${it.img ? `<img src="${it.img}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;"/>` : ''}
+    <div class="item-content" onclick="executeLink(${i})">
+      <b>${it.name}</b>
+      <span>${it.desc || 'Sin descripción'}</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+        ${it.date ? `<div class="item-date" style="margin-top:0;">📅 ${it.date}</div>` : '<div></div>'}
+        ${badge ? `<span style="font-size:11px; color:var(--primary); font-weight:600;">${badge}</span>` : ''}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-check" onclick="event.stopPropagation();toggle(${i})">✓</button>
+      <button class="btn-edit" onclick="event.stopPropagation();editItem(${i})">✎</button>
+      <button class="btn-delete" onclick="event.stopPropagation();deleteItem(${i})">✕</button>
+    </div>
+  `;
+  return d;
+}
+
+// Maneja la redirección inteligente al pulsar sobre una tarea vinculada
+function executeLink(i) {
+  const it = list.items[i];
+  if (!it.linkType || it.linkType === 'none') return;
+
+  if (it.linkType === 'url') {
+    let url = it.linkValue;
+    if (url) window.open(url.startsWith('http') ? url : 'https://' + url, '_blank');
+  } 
+  else if (it.linkType === 'list') {
+    const targetListIdx = it.linkValue;
+    if (lists[targetListIdx]) {
+      localStorage.setItem('currentList', targetListIdx);
+      location.reload(); // Cambia de lista inmediatamente
+    } else {
+      alert("La lista vinculada ya no existe.");
+    }
+  } 
+  else if (it.linkType === 'item') {
+    const [targetListIdx, targetItemIdx] = it.linkValue.split('_');
+    if (lists[targetListIdx]) {
+      localStorage.setItem('currentList', targetListIdx);
+      // Guardamos temporalmente el índice para resaltarlo al cargar
+      if (lists[targetListIdx].items[targetItemIdx]) {
+        localStorage.setItem('highlightItem', targetItemIdx);
+      }
+      location.reload();
+    } else {
+      alert("La tarea o su lista contenedora ya no existen.");
+    }
+  }
+}
+
+function saveEdit(i){
+  let it = list.items[i];
+  it.name = document.getElementById('name').value;
+  it.desc = document.getElementById('desc').value;
+  it.date = document.getElementById('date').value;
+  it.img = document.getElementById('img').value;
+  
+  // Guardar datos del vínculo avanzado
+  it.linkType = document.getElementById('link-type').value;
+  if (it.linkType === 'url') it.linkValue = document.getElementById('link-url').value;
+  else if (it.linkType === 'list') it.linkValue = document.getElementById('link-list-select').value;
+  else if (it.linkType === 'item') it.linkValue = document.getElementById('link-item-select').value;
+  else it.linkValue = '';
+
+  it.group = document.getElementById('group-select').value;
+  save(); closeModal();
+}
+
+function addElement(){
+  const name = document.getElementById('name').value;
+  if(!name) return alert("El título es obligatorio");
+  
+  const linkType = document.getElementById('link-type').value;
+  let linkValue = '';
+  if (linkType === 'url') linkValue = document.getElementById('link-url').value;
+  else if (linkType === 'list') linkValue = document.getElementById('link-list-select').value;
+  else if (linkType === 'item') linkValue = document.getElementById('link-item-select').value;
+
+  list.items.push({
+    name: name,
+    desc: document.getElementById('desc').value,
+    date: document.getElementById('date').value,
+    img: document.getElementById('img').value,
+    linkType: linkType,
+    linkValue: linkValue,
+    group: document.getElementById('group-select').value,
+    done: false
+  });
+  save(); closeModal();
+}
+
+function newGroup() {
+  document.getElementById('main-form').style.display = 'none';
+  document.getElementById('group-form').style.display = 'block';
+}
+
+function cancelNewGroup() {
+  document.getElementById('main-form').style.display = 'block';
+  document.getElementById('group-form').style.display = 'none';
+}
+
+function confirmNewGroup() {
+  const name = document.getElementById('new-group-name').value.trim();
+  if(name && !list.groups.includes(name)) {
+    list.groups.push(name);
+    save();
+    openModal(); 
+    document.getElementById('group-select').value = name;
+  } else {
+    cancelNewGroup();
+  }
+}
+
+function closeModal(){ document.getElementById('modal').style.display = 'none'; }
+function goBack(){ window.history.back(); }
+
+function handleFileUpload() {
+  const file = document.getElementById('file-input').files[0];
+  if (file) {
+    // Validar que el archivo no sea excesivamente grande (localStorage tiene un límite de ~5MB en total)
+    if (file.size > 1024 * 1024) { 
+      alert("La imagen es demasiado grande. Intenta con una de menos de 1MB para no saturar el almacenamiento.");
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onloadend = function() {
+      // Guarda la conversión en Base64 dentro del input de texto de la imagen
+      document.getElementById('img').value = reader.result;
+    }
+    reader.readAsDataURL(file);
+  }
+}
+
+render();
+// EFECTO DE ENFOQUE AUTOMÁTICO
+const highlightIdx = localStorage.getItem('highlightItem');
+if (highlightIdx !== null) {
+  localStorage.removeItem('highlightItem'); // Limpiamos la marca enseguida
+  setTimeout(() => {
+    const targetEl = document.getElementById('item-element-' + highlightIdx);
+    if (targetEl) {
+      // Hace scroll suave hasta centrar el elemento en la pantalla
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Aplica un destello de color morado (tu color primario)
+      targetEl.style.transition = 'all 0.4s ease';
+      targetEl.style.border = '2px solid var(--primary)';
+      targetEl.style.boxShadow = '0 0 15px rgba(99, 102, 241, 0.5)';
+      
+      // Quita el efecto pasados 2.5 segundos
+      setTimeout(() => {
+        targetEl.style.border = '';
+        targetEl.style.boxShadow = '';
+      }, 2500);
+    }
+  }, 300); // Pequeña pausa para asegurar el correcto renderizado del DOM
+}
+</script>
+</body>
+</html>
